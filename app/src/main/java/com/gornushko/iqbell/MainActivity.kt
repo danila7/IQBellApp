@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     var outStream: OutputStream? = null
     private val REQUEST_ENABLE_BLUETOOTH = 1
 
-    companion object{
+    companion object {
         var myUUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         var address = "C2:2C:05:04:04:FA"
     }
@@ -30,76 +30,105 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        refresh_button.setOnClickListener {pairedDeviceList()}
         btAdapter = BluetoothAdapter.getDefaultAdapter()
         if (btAdapter == null) {
-            errorExit("Fatal Error", "Bluetooth is not supported")
-        }
-        if (!btAdapter!!.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH)
-        }
-    }
-
-    private fun pairedDeviceList() {
-        for (device: BluetoothDevice in btAdapter!!.bondedDevices) {
-            if (device.address == address) {
-                   Toast.makeText(this, "The device is paired", Toast.LENGTH_SHORT).show()
-               }
+            Toast.makeText(this, getString(R.string.bt_not_supported), Toast.LENGTH_LONG).show()
+            finish()
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(requestCode ==  REQUEST_ENABLE_BLUETOOTH){
-            if(resultCode == Activity.RESULT_OK){
-                if(btAdapter!!.isEnabled){
-                    Toast.makeText(this,  "Bluetooth has been enabled", Toast.LENGTH_SHORT).show()
-                } else{
-                    Toast.makeText(this,  "Bluetooth has been disabled", Toast.LENGTH_SHORT).show()
+        if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (btAdapter!!.isEnabled) {
+                    btIsOn()
+                } else {
+                    Toast.makeText(this, getText(R.string.error_bt_enabling), Toast.LENGTH_SHORT).show()
                 }
-            } else if(resultCode == Activity.RESULT_CANCELED){
-                Toast.makeText(this,  "Bluetooth enabling has been canceled", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    public override fun onResume() {
-        super.onResume()
-        // Set up a pointer to the remote node using it's address.
-        val device = btAdapter!!.getRemoteDevice(address)
-        // Two things are needed to make a connection:
-        //   A MAC address, which we got above.
-        //   A Service ID or UUID.  In this case we are using the
-        //     UUID for SPP.
-        try {
-            btSocket = device.createRfcommSocketToServiceRecord(myUUID)
-        } catch (e: IOException) {
-            errorExit("Fatal Error", "In onResume() and socket create failed: " + e.message + ".")
+    fun turnBtOn(view: View) {
+        val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH)
+    }
+
+    private fun btIsOff() {
+        btStateText.text = getText(R.string.bt_is_off)
+        bt_on_button.visibility = View.VISIBLE
+        device_status.visibility = View.GONE
+    }
+
+    private fun btIsOn() {
+        btStateText.text = getText(R.string.bt_is_on)
+        bt_on_button.visibility = View.GONE
+        device_status.visibility = View.VISIBLE
+        checkIfPaired()
+    }
+
+    private fun checkIfPaired(){
+        var isPaired = false
+        for (device: BluetoothDevice in btAdapter!!.bondedDevices) if (device.address == address) isPaired = true
+        if (isPaired) {
+            device_status.text = getText(R.string.paired)
+            check_connection_button.visibility = View.VISIBLE
+            createBtSocket()
+        } else {
+            device_status.text = getText(R.string.unpaired)
         }
-        // Discovery is resource intensive.  Make sure it isn't going on
-        // when you attempt to connect and pass your message.
+    }
+
+    private fun createBtSocket() {
+        val btDevice = btAdapter!!.getRemoteDevice(address)
+
+        try {
+            btSocket = btDevice.createRfcommSocketToServiceRecord(myUUID)
+        } catch (e: IOException) {
+            Toast.makeText(this, "Fatal Error: Socket create failed", Toast.LENGTH_LONG).show()
+        }
         btAdapter!!.cancelDiscovery()
-        // Establish the connection.  This will block until it connects.
         try {
             btSocket!!.connect()
         } catch (e: IOException) {
             try {
                 btSocket!!.close()
             } catch (e2: IOException) {
-                errorExit(
-                    "Fatal Error",
-                    "In onResume() and unable to close socket during connection failure" + e2.message + "."
-                )
+                Toast.makeText(this, "Fatal Error: Unable to close socket during connection failure", Toast.LENGTH_LONG)
+                    .show()
             }
         }
         try {
             outStream = btSocket!!.outputStream
         } catch (e: IOException) {
-            errorExit("Fatal Error", "In onResume() and output stream creation failed:" + e.message + ".")
+            Toast.makeText(this, "Fatal Error: Output stream creation failed", Toast.LENGTH_LONG)
+                .show()
         }
     }
 
+    private fun checkBt() {
+        check_connection_button.visibility = View.GONE
+        connection_status.visibility = View.GONE
+        if (btAdapter!!.isEnabled) {
+            btIsOn()
+        } else {
+            btIsOff()
+        }
+    }
+
+    public override fun onResume() {
+        super.onResume()
+        checkBt()
+    }
+
+    fun checkConnection(view: View) {
+        connection_status.visibility = View.VISIBLE
+        connection_status.text = if (btSocket!!.isConnected) getText(R.string.connected) else getText(R.string.disconnected)
+    }
+}
+
+/*
     public override fun onPause() {
         super.onPause()
         if (outStream != null) {
@@ -112,21 +141,6 @@ class MainActivity : AppCompatActivity() {
         try {
             btSocket!!.close()
         } catch (e2: IOException) {
-            errorExit("Fatal Error", "In onPause() and failed to close socket." + e2.message + ".")
-        }
-    }
-
-
-    private fun errorExit(title: String, message: String) {
-        Toast.makeText(this, "$title - $message", Toast.LENGTH_LONG).show()
-        finish()
-    }
-
-    fun checkConnection(view: View){
-        if (btSocket!!.isConnected){
-            Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show()
-        } else{
-            Toast.makeText(this, "Not connected", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -139,12 +153,4 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Error sending data", Toast.LENGTH_SHORT).show()
         }
     }
-
-    fun sendOn(view: View){
-        sendData("1")
-    }
-
-    fun sendOff(view: View){
-        sendData("0")
-    }
-}
+    */
