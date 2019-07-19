@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">IQBell</string>
+    <string name="connect_button">Connect</string>
+    <string name="send_on_button">On</string>
+    <string name="send_off_button">Off</string>
+    <string name="refresh_text">Refresh</string>
+    <string name="check_connection_text">Check connection</string>
 </resources>
