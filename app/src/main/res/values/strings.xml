@@ -9,7 +9,7 @@
     <string name="paired">IQBell is paired</string>
     <string name="unpaired">IQBell is unpaired. Pair, then try again"</string>
     <string name="try_again">Try again</string>
-    <string name="check_connection">Check connection</string>
+    <string name="connect">Connect</string>
     <string name="connected">IQBell is connected</string>
     <string name="disconnected">IQBell is disconnected. Press the button on the case and hold for 5 seconds, then try again</string>
 </resources>
