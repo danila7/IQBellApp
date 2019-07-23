@@ -1,10 +1,8 @@
 package com.gornushko.iqbell
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,46 +15,44 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.IOException
-import java.io.OutputStream
-import java.util.*
+import java.nio.charset.Charset
 
 
 class MainActivity : AppCompatActivity() {
 
     private var btAdapter: BluetoothAdapter? = null
-    private var btSocket: BluetoothSocket? = null
-    var outStream: OutputStream? = null
-    private val REQUEST_ENABLE_BLUETOOTH = 1
-    lateinit var mHandler: Handler
+    private lateinit var mHandler: Handler
+    private var isConnected: Boolean = false
+    var btService: BluetoothService? = null
 
     companion object {
-        val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-        val address = "C2:2C:05:04:04:FA"
-        val TAG = "Bluetooth Action"
+        private const val TAG = "Bluetooth Action"
+        const val address = "C2:2C:05:04:04:FA"
     }
 
     private val mBroadcastReceiver1 = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
-            val action: String = intent.action!!
-            when (action) {
+            when (intent.action!!) {
                 BluetoothAdapter.ACTION_STATE_CHANGED -> {
-                    var state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)
-                    when (state) {
+                    when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                         BluetoothAdapter.STATE_ON -> {
                             Log.d(TAG, "BT STATE ON!")
                             btIsOn()
                         }
                         BluetoothAdapter.STATE_OFF -> {
-                            Log.d(TAG, "Bt STATE OFF!")
+                            Log.d(TAG, "BT STATE OFF!")
                             btIsOff()
                         }
                         BluetoothAdapter.STATE_TURNING_OFF -> {
                             Log.d(TAG, "BT STATE TURNING OFF...")
+                            btStateText.text = getText(R.string.bt_is_turning_off)
+
                         }
                         BluetoothAdapter.STATE_TURNING_ON -> {
                             Log.d(TAG, "BT STATE TURNING ON...")
+                            btStateText.text = getText(R.string.bt_is_turning_on)
+
                         }
                     }
                 }
@@ -72,26 +68,14 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.bt_not_supported), Toast.LENGTH_LONG).show()
             finish()
         }
-        var btIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        val btIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         registerReceiver(mBroadcastReceiver1, btIntent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(mBroadcastReceiver1)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (btAdapter!!.isEnabled) {
-                    btIsOn()
-                } else {
-                    Toast.makeText(this, getText(R.string.error_bt_enabling), Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+        btService?.closeConnection()
     }
 
     fun turnBtOn(view: View) {
@@ -106,6 +90,8 @@ class MainActivity : AppCompatActivity() {
         device_status.visibility = View.GONE
         connect_button.visibility = View.GONE
         connection_status.visibility = View.GONE
+        send_button.visibility = View.GONE
+        send_text.visibility = View.GONE
     }
 
     private fun btIsOn() {
@@ -127,22 +113,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun connect(view: View){
-        val connectThread = ConnectThread(btAdapter!!.getRemoteDevice(address))
+        //connectThread = ConnectThread(btAdapter!!.getRemoteDevice(address))
         mHandler = @SuppressLint("HandlerLeak")
         object : Handler() {
 
             override fun handleMessage(msg: Message?) {
                 connection_status.visibility = View.VISIBLE
                 when(msg!!.what){
-                    0 -> connection_status.text = getText(R.string.disconnected)
-                    1 -> connection_status.text = getText(R.string.connected)
+                    0 -> {
+                        connection_status.text = getText(R.string.disconnected)
+                        send_button.visibility = View.GONE
+                        send_text.visibility = View.GONE
+                        connect_button.visibility = View.VISIBLE
+                    }
+                    1 -> {
+                        connection_status.text = getText(R.string.connected)
+                        isConnected = true
+                        btService!!.startDataThread()
+                        send_button.visibility = View.VISIBLE
+                        send_text.visibility = View.VISIBLE
+                        connect_button.visibility = View.GONE
+                    }
                 }
             }
         }
-        connectThread.start()
+        btService = BluetoothService(btAdapter!!, mHandler)
+        connect_button.visibility = View.GONE
     }
 
     private fun checkBt() {
+        if(!isConnected) {
+            send_button.visibility = View.GONE
+            send_text.visibility = View.GONE
+        }
         connect_button.visibility = View.GONE
         connection_status.visibility = View.GONE
         if (btAdapter!!.isEnabled) {
@@ -157,103 +160,7 @@ class MainActivity : AppCompatActivity() {
         checkBt()
     }
 
-    private inner class ConnectThread(device: BluetoothDevice) : Thread() {
-
-        private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
-            device.createRfcommSocketToServiceRecord(MY_UUID)
-        }
-
-        public override fun run() {
-            // Cancel discovery because it otherwise slows down the connection.
-            btAdapter?.cancelDiscovery()
-
-            mmSocket?.use { socket ->
-                // Connect to the remote device through the socket. This call blocks
-                // until it succeeds or throws an exception.
-                try{
-                    socket.connect()
-                    Log.d(TAG, "Connected?")
-                } catch (e: IOException){}
-
-                if(socket.isConnected) mHandler.sendEmptyMessage(1)
-                else mHandler.sendEmptyMessage(0)
-
-
-                // The connection attempt succeeded. Perform work associated with
-                // the connection in a separate thread.
-                //manageMyConnectedSocket(socket)
-            }
-            cancel()
-        }
-
-        // Closes the client socket and causes the thread to finish.
-        fun cancel() {
-            try {
-                mmSocket?.close()
-                Log.d(TAG,"Socket closed")
-            } catch (e: IOException) {
-                Log.e(TAG, "Could not close the client socket", e)
-            }
-        }
+    fun send(view: View){
+        btService!!.write(send_text.text.toString().toByteArray(Charset.forName("ASCII")))
     }
 }
-/*
-    private inner class ConnectThread(device: BluetoothDevice) : Thread() {
-
-        private val mmSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
-            device.createRfcommSocketToServiceRecord(MY_UUID)
-        }
-
-        override fun run() {
-            // Cancel discovery because it otherwise slows down the connection.
-            btAdapter!!.cancelDiscovery()
-
-            mmSocket?.use { socket ->
-                // Connect to the remote device through the socket. This call blocks
-                // until it succeeds or throws an exception.
-                socket.connect()
-
-                // The connection attempt succeeded. Perform work associated with
-                // the connection in a separate thread.
-
-            }
-        }
-
-        // Closes the client socket and causes the thread to finish.
-        fun cancel() {
-            try {
-                mmSocket?.close()
-            } catch (e: IOException) {
-                Toast.makeText(baseContext, "Could not close the client socket", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-}
-*/
-/*
-    public override fun onPause() {
-        super.onPause()
-        if (outStream != null) {
-            try {
-                outStream!!.flush()
-            } catch (e: IOException) {
-                errorExit("Fatal Error", "In onPause() and failed to flush output stream: " + e.message + ".")
-            }
-        }
-        try {
-            btSocket!!.close()
-        } catch (e2: IOException) {
-        }
-    }
-
-    private fun sendData(message: String) {
-        val msgBuffer = message.toByteArray()
-        try {
-            outStream!!.write(msgBuffer)
-            Toast.makeText(this, "Sent", Toast.LENGTH_SHORT).show()
-        } catch (e: IOException) {
-            Toast.makeText(this, "Error sending data", Toast.LENGTH_SHORT).show()
-        }
-    }
-    */

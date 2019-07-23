@@ -14,8 +14,6 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ConnectActivity">
-        </activity>
         <activity
                 android:name=".MainActivity"
                 android:screenOrientation="portrait">

@@ -4,6 +4,8 @@
     <string name="bt_not_supported">Bluetooth isn\'t supported on your device!</string>
     <string name="bt_is_on">Bluetooth is on!</string>
     <string name="bt_is_off">Bluetooth is off! Turn  it on to continue</string>
+    <string name="bt_is_turning_on">Bluetooth is turning on…</string>
+    <string name="bt_is_turning_off">Bluetooth is turning off…</string>
     <string name="turn_on">Turn bluetooth on</string>
     <string name="error_bt_enabling">An error occurred while turning Bluetooth on</string>
     <string name="paired">IQBell is paired</string>
@@ -12,4 +14,5 @@
     <string name="connect">Connect</string>
     <string name="connected">IQBell is connected</string>
     <string name="disconnected">IQBell is disconnected. Press the button on the case and hold for 5 seconds, then try again</string>
+    <string name="send">Send</string>
 </resources>
