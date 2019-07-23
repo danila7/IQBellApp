@@ -46,12 +46,12 @@ class MainActivity : AppCompatActivity() {
                         }
                         BluetoothAdapter.STATE_TURNING_OFF -> {
                             Log.d(TAG, "BT STATE TURNING OFF...")
-                            btStateText.text = getText(R.string.bt_is_turning_off)
+                            bt_state_text.text = getText(R.string.bt_is_turning_off)
 
                         }
                         BluetoothAdapter.STATE_TURNING_ON -> {
                             Log.d(TAG, "BT STATE TURNING ON...")
-                            btStateText.text = getText(R.string.bt_is_turning_on)
+                            bt_state_text.text = getText(R.string.bt_is_turning_on)
 
                         }
                     }
@@ -70,6 +70,34 @@ class MainActivity : AppCompatActivity() {
         }
         val btIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         registerReceiver(mBroadcastReceiver1, btIntent)
+        mHandler = @SuppressLint("HandlerLeak")
+        object : Handler() {
+
+            override fun handleMessage(msg: Message) {
+
+                when (msg.what) {
+                    0 -> {
+                        connection_status.text = getText(R.string.disconnected)
+                        send_button.visibility = View.GONE
+                        send_text.visibility = View.GONE
+                        connect_button.visibility = View.VISIBLE
+                    }
+                    1 -> {
+                        connection_status.text = getText(R.string.connected)
+                        isConnected = true
+                        btService!!.startDataThread()
+                        send_button.visibility = View.VISIBLE
+                        send_text.visibility = View.VISIBLE
+                        connect_button.visibility = View.GONE
+                    }
+                    2 -> {
+                        val readBuffer: ByteArray = msg.obj as ByteArray
+                        incoming_data.text = String(readBuffer, Charset.forName("ASCII"))
+                        Log.i(TAG, "Data was shown")
+                    }
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -85,7 +113,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun btIsOff() {
-        btStateText.text = getText(R.string.bt_is_off)
+        bt_state_text.text = getText(R.string.bt_is_off)
         bt_on_button.visibility = View.VISIBLE
         device_status.visibility = View.GONE
         connect_button.visibility = View.GONE
@@ -95,7 +123,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun btIsOn() {
-        btStateText.text = getText(R.string.bt_is_on)
+        bt_state_text.text = getText(R.string.bt_is_on)
         bt_on_button.visibility = View.GONE
         device_status.visibility = View.VISIBLE
         checkIfPaired()
@@ -113,30 +141,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun connect(view: View){
-        //connectThread = ConnectThread(btAdapter!!.getRemoteDevice(address))
-        mHandler = @SuppressLint("HandlerLeak")
-        object : Handler() {
-
-            override fun handleMessage(msg: Message?) {
-                connection_status.visibility = View.VISIBLE
-                when(msg!!.what){
-                    0 -> {
-                        connection_status.text = getText(R.string.disconnected)
-                        send_button.visibility = View.GONE
-                        send_text.visibility = View.GONE
-                        connect_button.visibility = View.VISIBLE
-                    }
-                    1 -> {
-                        connection_status.text = getText(R.string.connected)
-                        isConnected = true
-                        btService!!.startDataThread()
-                        send_button.visibility = View.VISIBLE
-                        send_text.visibility = View.VISIBLE
-                        connect_button.visibility = View.GONE
-                    }
-                }
-            }
-        }
         btService = BluetoothService(btAdapter!!, mHandler)
         connect_button.visibility = View.GONE
     }

@@ -2,6 +2,7 @@ package com.gornushko.iqbell
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
+import android.os.Message
 import android.util.Log
 import java.io.IOException
 import java.io.InputStream
@@ -19,7 +20,6 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
 
     private var data: DataThread? = null
     private val connectThread: ConnectThread
-    var inputData: ByteArray? = null
 
 
     init {
@@ -89,20 +89,20 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
         }
 
         override fun run() {
+            Log.d(TAG,"Starting input thread listening")
             while (true) {
-                inputData = try {
-                    if(inputData == null) iStream.readBytes()
-                    else{
-                        if(inputData != null){
-                            val newData = iStream.readBytes()
-                            val oldData: ByteArray = inputData!!
-                            oldData + newData
-                        } else iStream.readBytes()
-                    }
-                } catch (e: IOException) {
-                    Log.e(TAG, "Failed to read data from Input Stream")
-                    break
+                Log.d(TAG, "Checking input...")
+                if(iStream.available() > 0) try{
+                    Log.i(TAG, "Data was received")
+                    val av = iStream.available()
+                    Log.d(TAG, "$av bytes available")
+                    var iData = ByteArray(av)
+                    iStream.read(iData)
+                    handler.sendMessage(Message.obtain(handler, 2, iData))
+                } catch (e: IOException){
+                    Log.e(TAG, "Can't read data from Input Stream")
                 }
+                sleep(1000)
             }
         }
 
