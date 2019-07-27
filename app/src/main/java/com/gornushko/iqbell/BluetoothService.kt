@@ -18,7 +18,7 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
         const val TAG = "My Bluetooth Service"
     }
 
-    private var data: DataThread? = null
+    private var connection: DataThread? = null
     private val connectThread: ConnectThread
 
 
@@ -27,17 +27,17 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
         connectThread.start()
     }
 
-    fun startDataThread(){
-        data?.start()
+    fun login(){
+        connection?.start()
     }
 
     fun closeConnection(){
+        connection?.cancel()
         connectThread.cancel()
-        data?.cancel()
     }
 
     fun write(bytes: ByteArray){
-        data?.write(bytes)
+        connection?.write(bytes)
     }
 
     private inner class ConnectThread : Thread() {
@@ -58,7 +58,7 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
             }
 
             if(mmSocket.isConnected){
-                data = DataThread(mmSocket)
+                connection = DataThread(mmSocket)
                 handler.sendEmptyMessage(1)
             }
             else{
@@ -91,6 +91,10 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
         override fun run() {
             Log.d(TAG,"Starting input thread listening")
             while (true) {
+
+
+
+
                 Log.d(TAG, "Checking input...")
                 if(iStream.available() > 0) try{
                     Log.i(TAG, "Data was received")
@@ -100,7 +104,7 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
                     iStream.read(iData)
                     handler.sendMessage(Message.obtain(handler, 2, iData))
                 } catch (e: IOException){
-                    Log.e(TAG, "Can't read data from Input Stream")
+                    Log.e(TAG, "Can't read connection from Input Stream")
                 }
                 sleep(1000)
             }
@@ -114,7 +118,7 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
                 oStream.flush()
                 Log.d(TAG, "Success")
             } catch (e: IOException){
-                Log.e(TAG, "Failed to write data to output stream")
+                Log.e(TAG, "Failed to write connection to output stream")
             }
         }
 

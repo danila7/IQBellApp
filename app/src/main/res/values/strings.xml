@@ -14,5 +14,7 @@
     <string name="connect">Connect</string>
     <string name="connected">IQBell is connected</string>
     <string name="disconnected">IQBell is disconnected. Press the button on the case and hold for 5 seconds, then try again</string>
-    <string name="send">Send</string>
+    <string name="login">Log in</string>
+    <string name="device_state">Device state</string>
+    <string name="password">Password</string>
 </resources>

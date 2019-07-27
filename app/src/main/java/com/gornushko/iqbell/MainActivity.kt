@@ -15,7 +15,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import java.nio.charset.Charset
 
 
 class MainActivity : AppCompatActivity() {
@@ -78,21 +77,20 @@ class MainActivity : AppCompatActivity() {
                 when (msg.what) {
                     0 -> {
                         connection_status.text = getText(R.string.disconnected)
-                        send_button.visibility = View.GONE
-                        send_text.visibility = View.GONE
+                        login_button.visibility = View.GONE
+                        login_button.visibility = View.GONE
                         connect_button.visibility = View.VISIBLE
                     }
                     1 -> {
                         connection_status.text = getText(R.string.connected)
                         isConnected = true
-                        btService!!.startDataThread()
-                        send_button.visibility = View.VISIBLE
-                        send_text.visibility = View.VISIBLE
+                        login_button.visibility = View.VISIBLE
+                        login_button.visibility = View.VISIBLE
                         connect_button.visibility = View.GONE
                     }
                     2 -> {
                         val readBuffer: ByteArray = msg.obj as ByteArray
-                        incoming_data.text = String(readBuffer, Charset.forName("ASCII"))
+                        //device_state.text = String(readBuffer, Charset.forName("ASCII"))
                         Log.i(TAG, "Data was shown")
                     }
                 }
@@ -118,8 +116,8 @@ class MainActivity : AppCompatActivity() {
         device_status.visibility = View.GONE
         connect_button.visibility = View.GONE
         connection_status.visibility = View.GONE
-        send_button.visibility = View.GONE
-        send_text.visibility = View.GONE
+        login_button.visibility = View.GONE
+        password.visibility = View.GONE
     }
 
     private fun btIsOn() {
@@ -147,8 +145,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkBt() {
         if(!isConnected) {
-            send_button.visibility = View.GONE
-            send_text.visibility = View.GONE
+            login_button.visibility = View.GONE
+            password.visibility = View.GONE
         }
         connect_button.visibility = View.GONE
         connection_status.visibility = View.GONE
@@ -164,7 +162,11 @@ class MainActivity : AppCompatActivity() {
         checkBt()
     }
 
-    fun send(view: View){
-        btService!!.write(send_text.text.toString().toByteArray(Charset.forName("ASCII")))
+    fun login(view: View){
+        if(password.text.toString().length > 16) Toast.makeText(this, "Passed", Toast.LENGTH_SHORT)
+        else Toast.makeText(this, "Failed", Toast.LENGTH_SHORT)
+        //btService!!.login()
+        //btService!!.write(send_text.text.toString().toByteArray(Charset.forName("ASCII")))
+
     }
 }
