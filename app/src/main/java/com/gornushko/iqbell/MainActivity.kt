@@ -3,10 +3,12 @@ package com.gornushko.iqbell
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
@@ -15,12 +17,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import java.nio.charset.Charset
 
 
 class MainActivity : AppCompatActivity() {
 
     private var btAdapter: BluetoothAdapter? = null
-    private lateinit var mHandler: Handler
     private var isConnected: Boolean = false
     var btService: BluetoothService? = null
 
@@ -69,33 +71,6 @@ class MainActivity : AppCompatActivity() {
         }
         val btIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         registerReceiver(mBroadcastReceiver1, btIntent)
-        mHandler = @SuppressLint("HandlerLeak")
-        object : Handler() {
-
-            override fun handleMessage(msg: Message) {
-
-                when (msg.what) {
-                    0 -> {
-                        connection_status.text = getText(R.string.disconnected)
-                        login_button.visibility = View.GONE
-                        login_button.visibility = View.GONE
-                        connect_button.visibility = View.VISIBLE
-                    }
-                    1 -> {
-                        connection_status.text = getText(R.string.connected)
-                        isConnected = true
-                        login_button.visibility = View.VISIBLE
-                        login_button.visibility = View.VISIBLE
-                        connect_button.visibility = View.GONE
-                    }
-                    2 -> {
-                        val readBuffer: ByteArray = msg.obj as ByteArray
-                        //device_state.text = String(readBuffer, Charset.forName("ASCII"))
-                        Log.i(TAG, "Data was shown")
-                    }
-                }
-            }
-        }
     }
 
     override fun onDestroy() {
@@ -139,8 +114,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun connect(view: View){
-        btService = BluetoothService(btAdapter!!, mHandler)
         connect_button.visibility = View.GONE
+        connection_status.text = getText(R.string.loading)
+        connection_status.visibility = View.VISIBLE
+        val connectHandler = @SuppressLint("HandlerLeak")
+        object : Handler() {
+            override fun handleMessage(msg: Message) {
+                when (msg.what) {
+                    0 -> {
+                        connection_status.text = getText(R.string.disconnected)
+                        login_button.visibility = View.GONE
+                        login_button.visibility = View.GONE
+                        connect_button.visibility = View.VISIBLE
+
+                    }
+                    1 -> {
+                        connection_status.text = getText(R.string.connected)
+                        isConnected = true
+                        login_button.visibility = View.VISIBLE
+                        password.visibility = View.VISIBLE
+                        connect_button.visibility = View.GONE
+                    }
+                }
+            }
+        }
+        btService = BluetoothService(btAdapter!!, connectHandler)
     }
 
     private fun checkBt() {
@@ -163,10 +161,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun login(view: View){
-        if(password.text.toString().length > 16) Toast.makeText(this, "Passed", Toast.LENGTH_SHORT)
-        else Toast.makeText(this, "Failed", Toast.LENGTH_SHORT)
-        //btService!!.login()
+        if(password.text.toString().length == 16) {
+            val pass = password.text.toString().toByteArray(Charset.forName("ASCII"))
+            val mAuth = Obj.Authorization()
+            mAuth.execute(pass)
+        }
+        else Toast.makeText(this, "Incorrect password", Toast.LENGTH_SHORT).show()
         //btService!!.write(send_text.text.toString().toByteArray(Charset.forName("ASCII")))
+    }
 
+    object Obj {
+        class Authorization : AsyncTask<ByteArray, Void, Void>() {
+            override fun doInBackground(vararg p0: ByteArray?): Void? {
+                val oStream = BluetoothService.socket!!.outputStream
+                val iStream = BluetoothService.socket!!.inputStream
+                oStream.write(p0[0]!!)
+
+                return null
+            }
+
+        }
     }
 }

@@ -16,28 +16,18 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         const val address = MainActivity.address
         const val TAG = "My Bluetooth Service"
+        var socket: BluetoothSocket? = null
     }
 
-    private var connection: DataThread? = null
     private val connectThread: ConnectThread
-
 
     init {
         connectThread = ConnectThread()
         connectThread.start()
     }
 
-    fun login(){
-        connection?.start()
-    }
-
     fun closeConnection(){
-        connection?.cancel()
         connectThread.cancel()
-    }
-
-    fun write(bytes: ByteArray){
-        connection?.write(bytes)
     }
 
     private inner class ConnectThread : Thread() {
@@ -54,11 +44,9 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
                 mmSocket.connect()
                 Log.d(TAG, "Connected?")
             } catch (e: IOException){
-                //cancel()
+                Log.e(TAG, "An error occurred during connection process: " + e.message)
             }
-
             if(mmSocket.isConnected){
-                connection = DataThread(mmSocket)
                 handler.sendEmptyMessage(1)
             }
             else{
@@ -73,12 +61,12 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
                 mmSocket.close()
                 Log.d(TAG,"Socket closed")
             } catch (e: IOException) {
-                Log.e(TAG, "Could not cancel the client socket", e)
+                Log.e(TAG, "Could not close the client socket: " + e.message)
             }
         }
     }
 
-
+/*
     private inner class DataThread(socket: BluetoothSocket): Thread(){
         val oStream: OutputStream
         val iStream: InputStream
@@ -128,5 +116,5 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
                 oStream.close()
             }catch(e: IOException){}
         }
-    }
+    }*/
 }
