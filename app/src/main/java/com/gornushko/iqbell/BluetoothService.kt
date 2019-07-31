@@ -27,6 +27,7 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
     }
 
     fun closeConnection(){
+        connectThread.interrupt()
         connectThread.cancel()
     }
 
@@ -46,12 +47,14 @@ class BluetoothService(val btAdapter: BluetoothAdapter, val handler: android.os.
             } catch (e: IOException){
                 Log.e(TAG, "An error occurred during connection process: " + e.message)
             }
-            if(mmSocket.isConnected){
-                handler.sendEmptyMessage(1)
-            }
-            else{
-                handler.sendEmptyMessage(0)
-                cancel()
+            if(!interrupted()) {
+                if (mmSocket.isConnected) {
+                    socket = mmSocket
+                    handler.sendEmptyMessage(1)
+                } else {
+                    handler.sendEmptyMessage(0)
+                    cancel()
+                }
             }
         }
 
