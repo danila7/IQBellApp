@@ -6,49 +6,23 @@
         xmlns:lib="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".MainActivity" android:paddingStart="10dp" android:paddingEnd="10dp">
     <TextView
             android:layout_width="wrap_content"
-            android:layout_height="15dp"
-            android:id="@+id/bt_state_text" app:layout_constraintTop_toTopOf="parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/status" app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="92dp"
-            app:layout_constraintEnd_toEndOf="parent" android:text="@string/blank"/>
+            app:layout_constraintEnd_toEndOf="parent" android:text="@string/bt_is_off" android:textAlignment="center"
+            android:textStyle="bold"/>
     <Button
             android:text="@string/turn_on"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/bt_on_button"
             android:onClick="turnBtOn"
-            app:layout_constraintTop_toBottomOf="@+id/bt_state_text" app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/status" app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            android:layout_marginTop="16dp" android:visibility="visible"/>
-    <TextView
-            android:text="@string/blank"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/device_status"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/bt_on_button" android:layout_marginTop="60dp"/>
-    <Button
-            android:text="@string/connect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="connect"
-            android:id="@+id/connect_button"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/device_status" android:layout_marginTop="48dp"/>
-    <TextView
-            android:text="@string/blank"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/connection_status" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="8dp"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/device_status"
-            app:layout_constraintVertical_bias="0.374"/>
+            android:layout_marginTop="48dp" android:visibility="visible"/>
     <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -56,10 +30,10 @@
             android:ems="10"
             android:id="@+id/password"
             app:layout_constraintStart_toStartOf="parent" android:layout_marginEnd="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/connection_status" android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintHorizontal_bias="0.19"
-            app:layout_constraintVertical_bias="0.335" android:hint="@string/password"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"/>
+            app:layout_constraintHorizontal_bias="0.043"
+            android:hint="@string/password"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/status" android:layout_marginTop="296dp"/>
     <Button
             android:text="@string/login"
             android:layout_width="wrap_content"
@@ -85,6 +59,5 @@
             app:layout_constraintStart_toStartOf="parent" android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintBottom_toTopOf="@+id/password" android:layout_marginBottom="8dp"
-            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/connect_button"/>
+            app:layout_constraintTop_toBottomOf="@+id/status" android:layout_marginTop="136dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

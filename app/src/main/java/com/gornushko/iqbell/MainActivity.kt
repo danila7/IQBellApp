@@ -18,12 +18,72 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.nio.charset.Charset
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), UIControl {
+    override fun btOff() {
+        btService?.closeConnection()
+        status.text = getText(R.string.bt_is_off)
+        bt_on_button.visibility = View.VISIBLE
+        login_button.visibility = View.GONE
+        password.visibility = View.GONE
+        progress.visibility = View.INVISIBLE
+        btService?.closeConnection()
+        btService = null
+    }
+
+    override fun btOnNotPaired() {
+        status.text = getText(R.string.not_paired)
+        bt_on_button.visibility = View.GONE
+        login_button.visibility = View.GONE
+        password.visibility = View.GONE
+        progress.visibility = View.INVISIBLE
+    }
+
+    override fun connected() {
+        bt_on_button.visibility = View.GONE
+        login_button.visibility = View.VISIBLE
+        password.visibility = View.VISIBLE
+        progress.visibility = View.INVISIBLE
+        status.text = getText(R.string.connected)
+    }
+
+    override fun reconnecting() {
+        bt_on_button.visibility = View.GONE
+        login_button.visibility = View.GONE
+        password.visibility = View.GONE
+        progress.visibility = View.VISIBLE
+        status.text = getText(R.string.disconnected)
+    }
+
+    override fun authenticating() {
+        login_button.isEnabled = true
+        progress.visibility = View.VISIBLE
+
+    }
+
+    override fun authFailed() {
+        status.text = getText(R.string.authorization_failed)
+        progress.visibility = View.GONE
+    }
+
+    override fun authSucceed() {
+        progress.visibility = View.GONE
+        val intent = Intent(this, WorkActivity::class.java)
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(intent)
+    }
+
+    override fun connecting() {
+        bt_on_button.visibility = View.GONE
+        login_button.visibility = View.GONE
+        password.visibility = View.GONE
+        progress.visibility = View.VISIBLE
+        status.text = getText(R.string.connecting)
+        btService?.start()
+    }
 
     private var btAdapter: BluetoothAdapter? = null
-    private var isConnected: Boolean = false
-    private var btService: BluetoothService? = null
-    private var mAuth: Authorization? = null
+    private var btService: BluetoothClass? = null
 
     companion object {
         private const val TAG = "Bluetooth Action"
@@ -34,23 +94,25 @@ class MainActivity : AppCompatActivity() {
 
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action!!) {
+
                 BluetoothAdapter.ACTION_STATE_CHANGED -> {
                     when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                         BluetoothAdapter.STATE_ON -> {
                             Log.d(TAG, "BT STATE ON!")
-                            btIsOn()
+                            checkBt()
                         }
                         BluetoothAdapter.STATE_OFF -> {
                             Log.d(TAG, "BT STATE OFF!")
+                            status.text = getText(R.string.bt_is_off)
                         }
                         BluetoothAdapter.STATE_TURNING_OFF -> {
                             Log.d(TAG, "BT STATE TURNING OFF...")
-                            bt_state_text.text = getText(R.string.bt_is_turning_off)
-                            btIsOff()
+                            status.text = getText(R.string.bt_is_turning_off)
+                            btOff()
                         }
                         BluetoothAdapter.STATE_TURNING_ON -> {
                             Log.d(TAG, "BT STATE TURNING ON...")
-                            bt_state_text.text = getText(R.string.bt_is_turning_on)
+                            status.text = getText(R.string.bt_is_turning_on)
 
                         }
                     }
@@ -69,6 +131,20 @@ class MainActivity : AppCompatActivity() {
         }
         val btIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         registerReceiver(mBroadcastReceiver1, btIntent)
+        val connectHandler = @SuppressLint("HandlerLeak")
+        object : Handler() {
+            override fun handleMessage(msg: Message) {
+                when (msg.what) {
+                    0 -> {
+                        reconnecting()
+                    }
+                    1 -> {
+                        connected()
+                    }
+                }
+            }
+        }
+        btService = BluetoothClass(btAdapter!!, connectHandler, this)
     }
 
     override fun onDestroy() {
@@ -83,97 +159,30 @@ class MainActivity : AppCompatActivity() {
         startActivity(enableBtIntent)
     }
 
-    private fun btIsOff() {
-        bt_state_text.text = getText(R.string.bt_is_off)
-        bt_on_button.visibility = View.VISIBLE
-        device_status.visibility = View.GONE
-        connect_button.visibility = View.GONE
-        connection_status.visibility = View.GONE
-        login_button.visibility = View.GONE
-        password.visibility = View.GONE
-        if(mAuth != null) mAuth!!.cancel(true)
-        btService?.closeConnection()
-        btService = null
-        progress.visibility = View.INVISIBLE
-    }
-
-    private fun btIsOn() {
-        bt_state_text.text = getText(R.string.bt_is_on)
-        bt_on_button.visibility = View.GONE
-        device_status.visibility = View.VISIBLE
-        checkIfPaired()
-    }
-
-    private fun checkIfPaired() {
-        var isPaired = false
-        for (device: BluetoothDevice in btAdapter!!.bondedDevices) if (device.address == address) isPaired = true
-        if (isPaired) {
-            device_status.text = getText(R.string.paired)
-            connect_button.visibility = View.VISIBLE
-        } else {
-            device_status.text = getText(R.string.unpaired)
-        }
-    }
-
-    fun connect(view: View){
-        connect_button.visibility = View.GONE
-        connection_status.visibility = View.INVISIBLE
-        progress.visibility = View.VISIBLE
-        val connectHandler = @SuppressLint("HandlerLeak")
-        object : Handler() {
-            override fun handleMessage(msg: Message) {
-                when (msg.what) {
-                    0 -> {
-                        connection_status.text = getText(R.string.disconnected)
-                        progress.visibility = View.INVISIBLE
-                        connection_status.visibility = View.VISIBLE
-                        login_button.visibility = View.GONE
-                        login_button.visibility = View.GONE
-                        connect_button.visibility = View.VISIBLE
-
-                    }
-                    1 -> {
-                        connection_status.text = getText(R.string.connected)
-                        progress.visibility = View.INVISIBLE
-                        connection_status.visibility = View.VISIBLE
-                        isConnected = true
-                        login_button.visibility = View.VISIBLE
-                        password.visibility = View.VISIBLE
-                        connect_button.visibility = View.GONE
-                    }
-                }
-            }
-        }
-        btService = BluetoothService(btAdapter!!, connectHandler)
-    }
-
     private fun checkBt() {
-        if(!isConnected) {
-            login_button.visibility = View.GONE
-            password.visibility = View.GONE
-        }
-        connect_button.visibility = View.GONE
-        connection_status.visibility = View.GONE
         if (btAdapter!!.isEnabled) {
-            btIsOn()
+            var isPaired = false
+            for (device: BluetoothDevice in btAdapter!!.bondedDevices) if (device.address == address) isPaired = true
+            if (isPaired) {
+                connecting()
+            } else {
+                btOnNotPaired()
+            }
         } else {
-            btIsOff()
+            btOff()
         }
     }
 
-    public override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
         checkBt()
+
     }
 
-    fun login(view: View){
-        if(password.text.toString().length == 16) {
+    fun login(view: View) {
+        if (password.text.toString().length == 16) {
             val pass = password.text.toString().toByteArray(Charset.forName("ASCII"))
-            mAuth = Authorization(this)
-            mAuth!!.execute(pass)
-        }
-        else Toast.makeText(this, "Incorrect password", Toast.LENGTH_SHORT).show()
-        //btService!!.write(send_text.text.toString().toByteArray(Charset.forName("ASCII")))
+            btService?.authorize(pass)
+        } else authFailed()
     }
-
 }
