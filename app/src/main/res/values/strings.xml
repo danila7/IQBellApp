@@ -2,8 +2,6 @@
     <string name="app_name">IQBell</string>
     <string name="bt_not_supported">Bluetooth isn\'t supported on your device!</string>
     <string name="bt_is_off">Bluetooth is off! Turn it on to continue</string>
-    <string name="bt_is_turning_on">Bluetooth is turning on…</string>
-    <string name="bt_is_turning_off">Bluetooth is turning off…</string>
     <string name="turn_on">Turn bluetooth on</string>
     <string name="error_bt_enabling">An error occurred while turning Bluetooth on</string>
     <string name="not_paired">IQBell is unpaired. Pair, then try again"</string>

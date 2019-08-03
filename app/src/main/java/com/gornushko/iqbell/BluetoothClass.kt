@@ -9,8 +9,8 @@ import java.io.IOException
 import java.lang.Exception
 import java.util.*
 
-class BluetoothClass(val btAdapter: BluetoothAdapter, val handler: android.os.Handler, val ui: UIControl) {
-
+class BluetoothClass(val btAdapter: BluetoothAdapter, val handler: android.os.Handler) {
+/*
     companion object {
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         const val address = MainActivity.address
@@ -169,7 +169,7 @@ class BluetoothClass(val btAdapter: BluetoothAdapter, val handler: android.os.Ha
             else ui.authFailed()
         }
     }
-
+*/
 }
 
 /*

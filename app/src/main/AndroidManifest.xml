@@ -15,16 +15,22 @@
             android:theme="@style/AppTheme"
             tools:ignore="GoogleAppIndexingWarning">
 
-        <service android:name=".BluetoothService"/>
+        <service
+                android:name=".IQService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
 
-        <activity android:name=".WorkActivity"
-            android:screenOrientation="portrait">
+        <activity
+                android:name=".WorkActivity"
+                android:screenOrientation="portrait">
         </activity>
         <activity
                 android:name=".MainActivity"
                 android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
