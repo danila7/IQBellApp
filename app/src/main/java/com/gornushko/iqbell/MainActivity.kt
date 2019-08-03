@@ -107,12 +107,17 @@ class MainActivity : AppCompatActivity(){
             IQService.BT_NOT_SUPPORTED -> btNotSupported()
             IQService.RECONNECTING -> reconnecting()
             IQService.CONNECTED -> connected()
+            IQService.AUTH_PROCESS -> authenticating()
+            IQService.AUTH_FAILED -> authFailed()
+            IQService.AUTH_SUCCEED -> authSucceed()
         }
     }
 
     fun login(view: View) {
         if (password.text.toString().length == 16) {
             val pass = password.text.toString().toByteArray(Charset.forName("ASCII"))
+            Log.d(TAG, "LOGIN")
+            startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.AUTH).putExtra(IQService.PASSWORD, pass))
         } else authFailed()
     }
 

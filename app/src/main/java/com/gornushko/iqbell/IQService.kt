@@ -1,5 +1,6 @@
 package com.gornushko.iqbell
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
@@ -9,6 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.AsyncTask
 import android.os.IBinder
 import android.util.Log
 import java.io.IOException
@@ -41,6 +43,11 @@ class IQService: Service() {
         const val RECONNECTING = 5
         const val CONNECTED = 6
         const val NOT_PAIRED = 4
+        const val AUTH = 7
+        const val PASSWORD = "pass"
+        const val AUTH_SUCCEED = 12
+        const val AUTH_FAILED = 10
+        const val AUTH_PROCESS = 11
     }
 
     override fun onCreate() {
@@ -88,6 +95,7 @@ class IQService: Service() {
                 }
             }
             CHECK_PAIRED -> if(btAdapter!!.isEnabled) checkPaired()
+            AUTH -> authorize(intent.getByteArrayExtra(PASSWORD)!!)
         }
         return START_NOT_STICKY
 
@@ -212,16 +220,14 @@ class IQService: Service() {
             }
         }
     }
-/*
+
     fun authorize(pass: ByteArray){
-        val auth = Authorization(ui)
+        val auth = Authorization()
         auth.execute(pass)
     }
 
-
-
     @SuppressLint("StaticFieldLeak")
-    inner class Authorization(val ui: UIControl) : AsyncTask<ByteArray, Void, Boolean>() {
+    private inner class Authorization : AsyncTask<ByteArray, Void, Boolean>() {
 
         override fun doInBackground(vararg p0: ByteArray?): Boolean {
             check?.flag = false
@@ -247,16 +253,14 @@ class IQService: Service() {
 
         override fun onPreExecute() {
             super.onPreExecute()
-            ui.authenticating()
+            pi?.send(AUTH_PROCESS)
         }
 
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
-            if(result!!) ui.authSucceed()
-            else ui.authFailed()
+            pi?.send(if(result!!) AUTH_SUCCEED else AUTH_FAILED)
         }
     }
-*/
 }
 
 /*
