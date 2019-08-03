@@ -101,10 +101,12 @@ class MainActivity : AppCompatActivity(){
         super.onActivityResult(requestCode, resultCode, data)
         Log.d(TAG, "Yeah! request: $requestCode result: $resultCode")
         when(resultCode){
-            IQService.PAIRED -> connecting()
+            IQService.CONNECTION -> connecting()
             IQService.NOT_PAIRED -> btOnNotPaired()
             IQService.BT_OFF -> btOff()
             IQService.BT_NOT_SUPPORTED -> btNotSupported()
+            IQService.RECONNECTING -> reconnecting()
+            IQService.CONNECTED -> connected()
         }
     }
 
