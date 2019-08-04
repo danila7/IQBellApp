@@ -11,4 +11,9 @@
     <string name="password">Password</string>
     <string name="connecting">Connecting…</string>
     <string name="authorization_failed">Authorization failed</string>
+    <string name="channel_name">IQBell Status</string>
+    <string name="channel_description">Shows whether IQBell is connected</string>
+    <string name="iq_status">IQBell Status</string>
+    <string name="preparing">Preparing to connect</string>
+    <string name="authorized">Authorized</string>
 </resources>

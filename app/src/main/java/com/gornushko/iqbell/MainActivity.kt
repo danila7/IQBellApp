@@ -2,6 +2,7 @@ package com.gornushko.iqbell
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -11,12 +12,11 @@ import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity(){
 
-    companion object BtState{
+    companion object Const{
         private const val TAG = "Bluetooth Action"
     }
 
-    private var isPaired = false
-
+    private var loggingIn = false
     private fun btOff() {
         status.text = getText(R.string.bt_is_off)
         bt_on_button.visibility = View.VISIBLE
@@ -64,8 +64,8 @@ class MainActivity : AppCompatActivity(){
     private fun authSucceed() {
         progress.visibility = View.GONE
         val intent = Intent(this, WorkActivity::class.java)
-
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        loggingIn = true
         startActivity(intent)
     }
 
@@ -89,12 +89,23 @@ class MainActivity : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val pIntent = createPendingResult(1, intent, 0)
-        startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.START).putExtra(IQService.PENDING_INTENT, pIntent))
+        val launchServiceIntent = Intent(this, IQService::class.java)
+            .putExtra(IQService.ACTION, IQService.START)
+            .putExtra(IQService.PENDING_INTENT, pIntent)
+        startService(launchServiceIntent)
     }
 
     override fun onRestart() {
         super.onRestart()
         startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.CHECK_PAIRED))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if(!loggingIn) {
+            startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.STOP_SERVICE))
+        }
+        Log.d(TAG, "MAIN ACTIVITY DESTROYED")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -117,7 +128,9 @@ class MainActivity : AppCompatActivity(){
         if (password.text.toString().length == 16) {
             val pass = password.text.toString().toByteArray(Charset.forName("ASCII"))
             Log.d(TAG, "LOGIN")
-            startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.AUTH).putExtra(IQService.PASSWORD, pass))
+            startService(Intent(this, IQService::class.java)
+                .putExtra(IQService.ACTION, IQService.AUTH)
+                .putExtra(IQService.PASSWORD, pass))
         } else authFailed()
     }
 
