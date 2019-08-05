@@ -23,24 +23,13 @@
             app:layout_constraintTop_toBottomOf="@+id/status" app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
             android:layout_marginTop="48dp" android:visibility="visible"/>
-    <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="textPassword"
-            android:ems="10"
-            android:id="@+id/password"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginEnd="8dp"
-            app:layout_constraintHorizontal_bias="0.043"
-            android:hint="@string/password"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginStart="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/status" android:layout_marginTop="296dp"/>
     <Button
             android:text="@string/login"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="login"
-            android:id="@+id/login_button" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="16dp"
-            app:layout_constraintBottom_toBottomOf="@+id/password"/>
+            android:id="@+id/login_button" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            android:layout_marginTop="16dp" app:layout_constraintTop_toBottomOf="@+id/progress"/>
 
     <com.github.glomadrian.loadingballs.BallView
             android:layout_width="100dp"
@@ -60,6 +49,41 @@
             app:layout_constraintStart_toStartOf="parent" android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintTop_toBottomOf="@+id/status" android:layout_marginTop="136dp"/>
+            app:layout_constraintTop_toBottomOf="@+id/status" android:layout_marginTop="112dp"/>
+    <CheckBox
+            android:text="@string/save_pass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/save_pass"
+            android:onClick="savePass"
+            app:layout_constraintTop_toBottomOf="@+id/pass_info" app:layout_constraintStart_toStartOf="@+id/password"
+    />
+    <TextView
+            android:text="@string/basic_pass_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/pass_info"
+            android:textStyle="italic"
+            app:layout_constraintTop_toBottomOf="@+id/password" android:layout_marginTop="8dp"
+            app:layout_constraintStart_toStartOf="@+id/password"/>
+    <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/colorAccent"
+            app:passwordToggleDrawable="@drawable/icon_selector"
+            app:layout_constraintTop_toBottomOf="@+id/progress"
+            app:layout_constraintBottom_toBottomOf="@+id/login_button" app:layout_constraintVertical_bias="0.05"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
+            android:id="@+id/password"
+            android:layout_marginEnd="8dp" app:layout_constraintEnd_toStartOf="@+id/login_button">
+
+        <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:inputType="textPassword"
+                android:hint="@string/password"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

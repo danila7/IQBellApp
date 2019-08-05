@@ -1,11 +1,14 @@
 package com.gornushko.iqbell
 
 import android.bluetooth.BluetoothAdapter
+import android.content.Context
 import android.content.Intent
-import android.os.Build
+import android.graphics.Color
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.nio.charset.Charset
@@ -14,23 +17,31 @@ class MainActivity : AppCompatActivity(){
 
     companion object Const{
         private const val TAG = "Bluetooth Action"
+        private const val SAVED_PASSWORD = "saved_password"
     }
 
     private var loggingIn = false
+    private var notPaired = false
+
     private fun btOff() {
         status.text = getText(R.string.bt_is_off)
         bt_on_button.visibility = View.VISIBLE
         login_button.visibility = View.GONE
         password.visibility = View.GONE
         progress.visibility = View.INVISIBLE
+        pass_info.visibility = View.GONE
+        save_pass.visibility = View.GONE
         turnBtOn(bt_on_button)
     }
 
     private fun btOnNotPaired() {
+        notPaired = true
         status.text = getText(R.string.not_paired)
         bt_on_button.visibility = View.GONE
         login_button.visibility = View.GONE
         password.visibility = View.GONE
+        pass_info.visibility = View.GONE
+        save_pass.visibility = View.GONE
         progress.visibility = View.INVISIBLE
     }
 
@@ -38,8 +49,15 @@ class MainActivity : AppCompatActivity(){
         bt_on_button.visibility = View.GONE
         login_button.visibility = View.VISIBLE
         password.visibility = View.VISIBLE
+        pass_info.visibility = View.VISIBLE
+        save_pass.visibility = View.VISIBLE
         progress.visibility = View.INVISIBLE
         status.text = getText(R.string.connected)
+        val sPref = getPreferences(Context.MODE_PRIVATE)
+        val pass = sPref.getString(SAVED_PASSWORD, "0")
+        if(pass != null && pass.length > 15){
+            password.editText!!.setText(pass)
+        }
     }
 
     private fun reconnecting() {
@@ -47,6 +65,8 @@ class MainActivity : AppCompatActivity(){
         login_button.visibility = View.GONE
         password.visibility = View.GONE
         progress.visibility = View.VISIBLE
+        pass_info.visibility = View.GONE
+        save_pass.visibility = View.GONE
         status.text = getText(R.string.disconnected)
     }
 
@@ -57,12 +77,19 @@ class MainActivity : AppCompatActivity(){
     }
 
     private fun authFailed() {
-        status.text = getText(R.string.authorization_failed)
-        progress.visibility = View.GONE
+        pass_info.text = getText(R.string.authorization_failed)
+        pass_info.setTextColor(Color.RED)
+        progress.visibility = View.INVISIBLE
     }
 
     private fun authSucceed() {
         progress.visibility = View.GONE
+        if(save_pass.isChecked){
+            val ed = getPreferences(Context.MODE_PRIVATE).edit()
+            ed.putString(SAVED_PASSWORD, password.editText!!.text.toString())
+            ed.apply()
+            Toast.makeText(this, getString(R.string.pass_saved), Toast.LENGTH_SHORT).show()
+        }
         val intent = Intent(this, WorkActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         loggingIn = true
@@ -70,10 +97,13 @@ class MainActivity : AppCompatActivity(){
     }
 
     private fun connecting() {
+        notPaired = false
         bt_on_button.visibility = View.GONE
         login_button.visibility = View.GONE
         password.visibility = View.GONE
         progress.visibility = View.VISIBLE
+        pass_info.visibility = View.GONE
+        save_pass.visibility = View.GONE
         status.text = getText(R.string.connecting)
     }
 
@@ -83,6 +113,8 @@ class MainActivity : AppCompatActivity(){
         progress.visibility = View.GONE
         password.visibility = View.GONE
         login_button.visibility = View.GONE
+        pass_info.visibility = View.GONE
+        save_pass.visibility = View.GONE
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,7 +129,7 @@ class MainActivity : AppCompatActivity(){
 
     override fun onRestart() {
         super.onRestart()
-        startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.CHECK_PAIRED))
+        if(notPaired) startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.CHECK_PAIRED))
     }
 
     override fun onDestroy() {
@@ -125,8 +157,8 @@ class MainActivity : AppCompatActivity(){
     }
 
     fun login(view: View) {
-        if (password.text.toString().length == 16) {
-            val pass = password.text.toString().toByteArray(Charset.forName("ASCII"))
+        if (password.editText!!.text. toString().length == 16) {
+            val pass = password.editText!!.text.toString().toByteArray(Charset.forName("ASCII"))
             Log.d(TAG, "LOGIN")
             startService(Intent(this, IQService::class.java)
                 .putExtra(IQService.ACTION, IQService.AUTH)
@@ -135,4 +167,13 @@ class MainActivity : AppCompatActivity(){
     }
 
     fun turnBtOn(view: View) = startActivity(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+
+    fun savePass(view: View){
+        if(!save_pass.isChecked){
+            val ed = getPreferences(Context.MODE_PRIVATE).edit()
+            ed.putString(SAVED_PASSWORD, "0")
+            ed.apply()
+            Toast.makeText(this, getString(R.string.pass_deleted), Toast.LENGTH_SHORT).show()
+        }
+    }
 }

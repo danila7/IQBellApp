@@ -10,10 +10,16 @@
     <string name="login">Log in</string>
     <string name="password">Password</string>
     <string name="connecting">Connecting…</string>
-    <string name="authorization_failed">Authorization failed</string>
+    <string name="authorization_failed">Incorrect password</string>
     <string name="channel_name">IQBell Status</string>
     <string name="channel_description">Shows whether IQBell is connected</string>
     <string name="iq_status">IQBell Status</string>
     <string name="preparing">Preparing to connect</string>
     <string name="authorized">Authorized</string>
+    <string name="show_pass">Show password</string>
+    <string name="save_pass">Remember password</string>
+    <string name="basic_pass_info">Contains letters A-z, a-z, and digits</string>
+    <string name="get_info">Get info</string>
+    <string name="pass_deleted">Saved password was deleted!</string>
+    <string name="pass_saved">Your password was saved!</string>
 </resources>

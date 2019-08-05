@@ -51,12 +51,14 @@ class IQService: Service() {
         const val AUTH_FAILED = 10
         const val AUTH_PROCESS = 11
         const val STOP_SERVICE = 404
-        const val NEW_PERNDING_INTENT = 301
+        const val NEW_PENDING_INTENT = 301
+        const val GET_INFO = 22
     }
 
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate")
+
         btAdapter = BluetoothAdapter.getDefaultAdapter()
         val btIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         registerReceiver(mBroadcastReceiver, btIntent)
@@ -106,7 +108,7 @@ class IQService: Service() {
                     checkBt()
                 }
             }
-            NEW_PERNDING_INTENT -> {
+            NEW_PENDING_INTENT -> {
                 pi = intent.getParcelableExtra(PENDING_INTENT)
                 updateNotification(getString(R.string.authorized), false)
             }
@@ -117,13 +119,16 @@ class IQService: Service() {
                 stopForeground(true)
                 stopSelf()
             }
+            GET_INFO -> {
+
+            }
         }
         return START_NOT_STICKY
     }
 
     private fun updateNotification(text: String, progress: Boolean){
         val builder = NotificationCompat.Builder(this, "id")
-            .setSmallIcon(R.drawable.ic_stat_bell)
+            .setSmallIcon(R.drawable.ic_bell_outline)
             .setContentTitle(getText(R.string.iq_status))
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -222,8 +227,7 @@ class IQService: Service() {
                     updateNotification(getString(R.string.connecting), true)
                     try {
                         mmSocket.close()
-                        Log.d(TAG, "Socket clos" +
-                                "ed")
+                        Log.d(TAG, "Socket closed")
                     } catch (e: IOException) {
                         Log.e(TAG, "Could not close the client socket: " + e.message)
                     }
@@ -328,55 +332,3 @@ class IQService: Service() {
         }
     }
 }
-
-/*
-    private inner class DataThread(socket: BluetoothSocket): Thread(){
-        val oStream: OutputStream
-        val iStream: InputStream
-        init {
-            Log.d(TAG, "Connected Thread: Starting...")
-            oStream = socket.outputStream
-            iStream = socket.inputStream
-        }
-
-        override fun run() {
-            Log.d(TAG,"Starting input thread listening")
-            while (true) {
-
-
-
-
-                Log.d(TAG, "Checking input...")
-                if(iStream.available() > 0) try{
-                    Log.i(TAG, "Data was received")
-                    val av = iStream.available()
-                    Log.d(TAG, "$av bytes available")
-                    var iData = ByteArray(av)
-                    iStream.read(iData)
-                    handler.sendMessage(Message.obtain(handler, 2, iData))
-                } catch (e: IOException){
-                    Log.e(TAG, "Can't read connection from Input Stream")
-                }
-                sleep(1000)
-            }
-        }
-
-        fun write(bytes: ByteArray){
-            val text = String(bytes, Charset.defaultCharset())
-            Log.d(TAG, "Writing to output stream: $text")
-            try {
-                oStream.write(bytes)
-                oStream.flush()
-                Log.d(TAG, "Success")
-            } catch (e: IOException){
-                Log.e(TAG, "Failed to write connection to output stream")
-            }
-        }
-
-        fun cancel(){
-            try{
-                iStream.close()
-                oStream.close()
-            }catch(e: IOException){}
-        }
-    }*/
