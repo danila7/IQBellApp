@@ -5,19 +5,21 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.text.InputType
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
+import org.jetbrains.anko.*
 import java.nio.charset.Charset
 
+@ExperimentalUnsignedTypes
 class MainActivity : AppCompatActivity(){
 
     companion object Const{
         private const val TAG = "Bluetooth Action"
         private const val SAVED_PASSWORD = "saved_password"
+        const val KEY = "key"
     }
 
     private var loggingIn = false
@@ -55,7 +57,8 @@ class MainActivity : AppCompatActivity(){
         status.text = getText(R.string.connected)
         val sPref = getPreferences(Context.MODE_PRIVATE)
         val pass = sPref.getString(SAVED_PASSWORD, "0")
-        if(pass != null && pass.length > 15){
+        if(pass != null && pass.length > 7
+        ){
             password.editText!!.setText(pass)
         }
     }
@@ -88,12 +91,10 @@ class MainActivity : AppCompatActivity(){
             val ed = getPreferences(Context.MODE_PRIVATE).edit()
             ed.putString(SAVED_PASSWORD, password.editText!!.text.toString())
             ed.apply()
-            Toast.makeText(this, getString(R.string.pass_saved), Toast.LENGTH_SHORT).show()
+            toast(getString(R.string.pass_saved))
         }
-        val intent = Intent(this, WorkActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         loggingIn = true
-        startActivity(intent)
+        startActivity(intentFor<WorkActivity>().newTask().clearTask().clearTop())
     }
 
     private fun connecting() {
@@ -120,16 +121,25 @@ class MainActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val pIntent = createPendingResult(1, intent, 0)
-        val launchServiceIntent = Intent(this, IQService::class.java)
-            .putExtra(IQService.ACTION, IQService.START)
-            .putExtra(IQService.PENDING_INTENT, pIntent)
-        startService(launchServiceIntent)
+        when(intent.extras?.getInt(KEY)){
+            IQService.RECONNECTING ->{
+                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
+                reconnecting()
+            }
+            IQService.BT_OFF -> {
+                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
+                btOff()
+            }
+            else -> startService(intentFor<IQService>(IQService.ACTION to IQService.START, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
+        }
+
+
+
     }
 
     override fun onRestart() {
         super.onRestart()
-        if(notPaired) startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.CHECK_PAIRED))
+        if(notPaired) startService(intentFor<IQService>(IQService.ACTION to IQService.CHECK_PAIRED))
     }
 
     override fun onDestroy() {
@@ -157,12 +167,9 @@ class MainActivity : AppCompatActivity(){
     }
 
     fun login(view: View) {
-        if (password.editText!!.text. toString().length == 16) {
+        if (password.editText!!.text. toString().length == 8) {
             val pass = password.editText!!.text.toString().toByteArray(Charset.forName("ASCII"))
-            Log.d(TAG, "LOGIN")
-            startService(Intent(this, IQService::class.java)
-                .putExtra(IQService.ACTION, IQService.AUTH)
-                .putExtra(IQService.PASSWORD, pass))
+            startService(intentFor<IQService>(IQService.ACTION to IQService.AUTH, IQService.PASSWORD to pass))
         } else authFailed()
     }
 
@@ -173,7 +180,7 @@ class MainActivity : AppCompatActivity(){
             val ed = getPreferences(Context.MODE_PRIVATE).edit()
             ed.putString(SAVED_PASSWORD, "0")
             ed.apply()
-            Toast.makeText(this, getString(R.string.pass_deleted), Toast.LENGTH_SHORT).show()
+            toast(getString(R.string.pass_deleted))
         }
     }
 }
