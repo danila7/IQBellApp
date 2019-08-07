@@ -29,9 +29,8 @@ class WorkActivity : AppCompatActivity() {
         Log.d(TAG, "Yeah! request: $requestCode result: $resultCode")
         when(resultCode){
             IQService.GOT_INFO -> {
-                val deviceTime = data!!.getLongExtra("date", 0)
-                val deviceDate = Date(deviceTime)
-                device_info.text = deviceDate.toString()
+                getTime(data!!.getLongExtra("date", 0))
+
             }
             IQService.RECONNECTING, IQService.BT_OFF -> {
                 goingBack = true
@@ -47,5 +46,15 @@ class WorkActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         if(!goingBack) startService(intentFor<IQService>(IQService.ACTION to IQService.STOP_SERVICE))
+    }
+
+    private fun getTime(timestamp: Long){
+        val cal = GregorianCalendar.getInstance()
+        cal.timeInMillis = timestamp
+        val timeString = "${cal.get(Calendar.HOUR)}:${cal.get(Calendar.MINUTE)}:${cal.get(Calendar.SECOND)}"
+        val dateString = "${cal.get(Calendar.DAY_OF_MONTH)}/${cal.get(Calendar.MONTH)+1}/${cal.get(Calendar.YEAR)}"
+        current_time.text = timeString
+        current_date.text = dateString
+
     }
 }

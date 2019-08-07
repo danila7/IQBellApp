@@ -19,7 +19,15 @@
     <string name="show_pass">Show password</string>
     <string name="save_pass">Remember password</string>
     <string name="basic_pass_info">Contains letters A-z, a-z, and digits</string>
-    <string name="get_info">Get info</string>
+    <string name="get_time">Get time</string>
     <string name="pass_deleted">Saved password was deleted!</string>
     <string name="pass_saved">Your password was saved!</string>
+    <string name="current_t">Current IQBell time is:</string>
+    <string name="current_d">Current IQBell data is:</string>
+    <string name="new_t">New IQBell time is:</string>
+    <string name="new_d">New IQBell date is:</string>
+    <string name="set_time">Set time</string>
+    <string name="set_date">Set date</string>
+    <string name="apply">Apply</string>
+    <string name="unknown">Unknown</string>
 </resources>
