@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="basic_pass_info">Содержит латинские буквы и цифры</string>
+    <string name="authorized">Вход выполнен</string>
+    <string name="bt_is_off">Bluetooth выключен! Включите, чтобы продолжить</string>
+    <string name="bt_not_supported">Bluetooth не поддерживается на вашем устройстве!</string>
+    <string name="channel_description">Показывает статус подключения IQBell</string>
+    <string name="channel_name">Состояние IQBell</string>
+    <string name="connected">IQBell подключен</string>
+    <string name="connecting">Соединение…</string>
+    <string name="current_d">Текущая дата на IQBell:</string>
+    <string name="current_t">Текущее время на IQBell:</string>
+    <string name="disconnected">IQBell не подключен. Нажмите кнопку на корпусе и удерживайте в течении 5 секунд</string>
+    <string name="error_bt_enabling">Возникла ошибка при включении Bluetooth</string>
+    <string name="get_time">Получить время</string>
+    <string name="iq_status">Состояние подключения</string>
+    <string name="login">Вход</string>
+    <string name="new_d">Новая дата:</string>
+    <string name="new_t">Новое время:</string>
+    <string name="not_paired">IQBell не подключен. Выполните подключение в настройках Bluetooth и попробуйте ещё раз</string>
+    <string name="pass_deleted">Сохраненный пароль был удален!</string>
+    <string name="pass_saved">Пароль был сохранен!</string>
+    <string name="password">Пароль</string>
+    <string name="preparing">Подготовка к соединению</string>
+    <string name="save_pass">Запомнить пароль</string>
+    <string name="set_date">Установить дату</string>
+    <string name="set_time">Установить время</string>
+    <string name="turn_on">Включить Bluetooth</string>
+    <string name="unknown">Неизвестно</string>
+    <string name="authorization_failed">Неверный пароль</string>
+    <string name="apply">Применить</string>
+    <string name="set_sys_time">Установить время Android</string>
+</resources>

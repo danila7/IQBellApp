@@ -1,33 +1,33 @@
 <resources>
-    <string name="app_name">IQBell</string>
+    <string name="app_name" translatable="false">IQBell</string>
     <string name="bt_not_supported">Bluetooth isn\'t supported on your device!</string>
     <string name="bt_is_off">Bluetooth is off! Turn it on to continue</string>
     <string name="turn_on">Turn bluetooth on</string>
     <string name="error_bt_enabling">An error occurred while turning Bluetooth on</string>
-    <string name="not_paired">IQBell is unpaired. Pair, then try again"</string>
+    <string name="not_paired">IQBell is unpaired. Pair, then try again</string>
     <string name="connected">IQBell is connected</string>
     <string name="disconnected">IQBell is disconnected. Press the button on the case and hold it for 5 seconds</string>
     <string name="login">Log in</string>
     <string name="password">Password</string>
     <string name="connecting">Connecting…</string>
     <string name="authorization_failed">Incorrect password</string>
-    <string name="channel_name">IQBell Status</string>
+    <string name="channel_name">IQBell State</string>
     <string name="channel_description">Shows whether IQBell is connected</string>
-    <string name="iq_status">IQBell Status</string>
     <string name="preparing">Preparing to connect</string>
     <string name="authorized">Authorized</string>
-    <string name="show_pass">Show password</string>
     <string name="save_pass">Remember password</string>
     <string name="basic_pass_info">Contains letters A-z, a-z, and digits</string>
     <string name="get_time">Get time</string>
     <string name="pass_deleted">Saved password was deleted!</string>
-    <string name="pass_saved">Your password was saved!</string>
+    <string name="pass_saved">The password was saved!</string>
     <string name="current_t">Current IQBell time is:</string>
-    <string name="current_d">Current IQBell data is:</string>
-    <string name="new_t">New IQBell time is:</string>
-    <string name="new_d">New IQBell date is:</string>
+    <string name="current_d">Current IQBell date is:</string>
+    <string name="new_t">New time is:</string>
+    <string name="new_d">New date is:</string>
     <string name="set_time">Set time</string>
     <string name="set_date">Set date</string>
     <string name="apply">Apply</string>
     <string name="unknown">Unknown</string>
+    <string name="iq_status">Connection Status</string>
+    <string name="set_sys_time">Set Android time</string>
 </resources>

@@ -241,7 +241,6 @@ class IQService: Service() {
                     Log.d(TAG, "Connected?")
                 } catch (e: IOException) {
                     Log.d(TAG, "An error occurred during connection process: " + e.message)
-                    break
                 }
                 if (mmSocket.isConnected) {
                     socket = mmSocket

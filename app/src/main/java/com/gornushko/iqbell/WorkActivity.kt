@@ -1,5 +1,7 @@
 package com.gornushko.iqbell
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -7,6 +9,7 @@ import android.util.Log
 import android.view.View
 import kotlinx.android.synthetic.main.activity_work.*
 import org.jetbrains.anko.*
+import java.text.DateFormat
 import java.util.*
 
 @ExperimentalUnsignedTypes
@@ -17,6 +20,8 @@ class WorkActivity : AppCompatActivity() {
     }
 
     private var goingBack = false
+    private val currentDateTime: Calendar = GregorianCalendar.getInstance()
+    private val newDateTime: Calendar = GregorianCalendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,12 +54,41 @@ class WorkActivity : AppCompatActivity() {
     }
 
     private fun getTime(timestamp: Long){
-        val cal = GregorianCalendar.getInstance()
-        cal.timeInMillis = timestamp
-        val timeString = "${cal.get(Calendar.HOUR)}:${cal.get(Calendar.MINUTE)}:${cal.get(Calendar.SECOND)}"
-        val dateString = "${cal.get(Calendar.DAY_OF_MONTH)}/${cal.get(Calendar.MONTH)+1}/${cal.get(Calendar.YEAR)}"
-        current_time.text = timeString
-        current_date.text = dateString
+        currentDateTime.timeInMillis = timestamp
+        current_time.text = DateFormat.getTimeInstance().format(currentDateTime.time)
+        current_date.text = DateFormat.getDateInstance().format(currentDateTime.time)
+
+    }
+
+    fun timePicker(view: View){
+        val dialog = TimePickerDialog(this, android.R.style.ThemeOverlay_Material_Dialog,
+            TimePickerDialog.OnTimeSetListener{_, mHour, mMinute -> run{
+                newDateTime.set(Calendar.HOUR_OF_DAY, mHour)
+                newDateTime.set(Calendar.MINUTE, mMinute)
+                newDateTime.set(Calendar.SECOND, 0)
+                new_time.text = DateFormat.getTimeInstance().format(newDateTime.time)
+            }}, currentDateTime.get(Calendar.HOUR_OF_DAY), currentDateTime.get(Calendar.MINUTE), true)
+        dialog.show()
+    }
+
+    fun datePicker(view: View){
+        val dialog = DatePickerDialog(this, android.R.style.ThemeOverlay_Material_Dialog,
+            DatePickerDialog.OnDateSetListener{_, mYear, mMonth, mDay -> run{
+                newDateTime.set(Calendar.YEAR, mYear)
+                newDateTime.set(Calendar.MONTH, mMonth)
+                newDateTime.set(Calendar.DAY_OF_MONTH, mDay)
+                new_date.text = DateFormat.getDateInstance().format(newDateTime.time)
+            }}, currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH),
+            currentDateTime.get(Calendar.DAY_OF_MONTH))
+        dialog.show()
+    }
+
+    fun sendTime(view: View){
+
+
+    }
+
+    fun setSysTime(view: View){
 
     }
 }
