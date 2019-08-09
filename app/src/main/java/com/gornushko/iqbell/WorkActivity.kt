@@ -22,6 +22,8 @@ class WorkActivity : AppCompatActivity() {
     private var goingBack = false
     private val currentDateTime: Calendar = GregorianCalendar.getInstance()
     private val newDateTime: Calendar = GregorianCalendar.getInstance()
+    private val df = DateFormat.getDateInstance(DateFormat.LONG)
+    private val tf = DateFormat.getTimeInstance(DateFormat.DEFAULT)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,8 +35,8 @@ class WorkActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         Log.d(TAG, "Yeah! request: $requestCode result: $resultCode")
         when(resultCode){
-            IQService.GOT_INFO -> {
-                getTime(data!!.getLongExtra("date", 0))
+            IQService.GET_INFO_RESULT -> {
+                getDeviceInfo(data!!.getByteArrayExtra(IQService.DATA)!!)
 
             }
             IQService.RECONNECTING, IQService.BT_OFF -> {
@@ -45,7 +47,7 @@ class WorkActivity : AppCompatActivity() {
     }
 
     fun getInfo(view: View){
-        startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.GET_INFO))
+        startService(intentFor<IQService>(IQService.ACTION to IQService.DATA_TRANSFER, IQService.TASK to 0, IQService.DATA to ByteArray(1)))
     }
 
     override fun onDestroy() {
@@ -53,10 +55,10 @@ class WorkActivity : AppCompatActivity() {
         if(!goingBack) startService(intentFor<IQService>(IQService.ACTION to IQService.STOP_SERVICE))
     }
 
-    private fun getTime(timestamp: Long){
-        currentDateTime.timeInMillis = timestamp
-        current_time.text = DateFormat.getTimeInstance().format(currentDateTime.time)
-        current_date.text = DateFormat.getDateInstance().format(currentDateTime.time)
+    private fun getDeviceInfo(data: ByteArray){
+        currentDateTime.timeInMillis = (getLongFromByteArray(data) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
+        current_time.text = tf.format(currentDateTime.time)
+        current_date.text = df.format(currentDateTime.time)
 
     }
 
@@ -66,7 +68,7 @@ class WorkActivity : AppCompatActivity() {
                 newDateTime.set(Calendar.HOUR_OF_DAY, mHour)
                 newDateTime.set(Calendar.MINUTE, mMinute)
                 newDateTime.set(Calendar.SECOND, 0)
-                new_time.text = DateFormat.getTimeInstance().format(newDateTime.time)
+                new_time.text = tf.format(newDateTime.time)
             }}, currentDateTime.get(Calendar.HOUR_OF_DAY), currentDateTime.get(Calendar.MINUTE), true)
         dialog.show()
     }
@@ -77,18 +79,34 @@ class WorkActivity : AppCompatActivity() {
                 newDateTime.set(Calendar.YEAR, mYear)
                 newDateTime.set(Calendar.MONTH, mMonth)
                 newDateTime.set(Calendar.DAY_OF_MONTH, mDay)
-                new_date.text = DateFormat.getDateInstance().format(newDateTime.time)
+                new_date.text = df.format(newDateTime.time)
             }}, currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH),
             currentDateTime.get(Calendar.DAY_OF_MONTH))
         dialog.show()
     }
 
     fun sendTime(view: View){
-
-
+        val timeForArduino = newDateTime.timeInMillis / 1_000 + 10_800
+        val data = ByteArray(1){0x4} + makeByteArrayFromLong(timeForArduino)
+        startService(intentFor<IQService>(IQService.ACTION to IQService.DATA_TRANSFER, IQService.TASK to 4, IQService.DATA to data))
     }
 
     fun setSysTime(view: View){
+        newDateTime.timeInMillis = System.currentTimeMillis()
+        new_date.text = df.format(newDateTime.time)
+        new_time.text = tf.format(Date())
+    }
 
+    private fun getLongFromByteArray(data: ByteArray): Long{
+        var result = 0u
+        for(i in 3 downTo 0) result = (result shl 8) + data[i].toUByte()
+        return result.toLong()
+    }
+
+    private fun makeByteArrayFromLong(sum: Long): ByteArray{
+        val result = ByteArray(4)
+        val tempSum = sum.toUInt()
+        for(i in 0..3) result[i] = (tempSum shr 8*i).toUByte().toByte()
+        return result
     }
 }

@@ -13,7 +13,7 @@
     <string name="disconnected">IQBell не подключен. Нажмите кнопку на корпусе и удерживайте в течении 5 секунд</string>
     <string name="error_bt_enabling">Возникла ошибка при включении Bluetooth</string>
     <string name="get_time">Получить время</string>
-    <string name="iq_status">Состояние подключения</string>
+    <string name="iq_status">Состояние подключения:</string>
     <string name="login">Вход</string>
     <string name="new_d">Новая дата:</string>
     <string name="new_t">Новое время:</string>

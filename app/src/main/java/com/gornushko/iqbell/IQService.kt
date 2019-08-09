@@ -31,7 +31,7 @@ class IQService: Service() {
     private var pi: PendingIntent? = null
     private var btAdapter: BluetoothAdapter? = null
     private var connectThread: ConnectThread
-    private var check: CheckConnectionThread? = null
+    private var ping: PingThread? = null
     private var socket: BluetoothSocket? = null
     private var auth: Authorization? = null
     private lateinit var currentPassword: ByteArray
@@ -62,8 +62,10 @@ class IQService: Service() {
         const val AUTH_PROCESS = 11
         const val STOP_SERVICE = 404
         const val NEW_PENDING_INTENT = 301
-        const val GET_INFO = 22
-        const val GOT_INFO = 23
+        const val DATA_TRANSFER = 22
+        const val GET_INFO_RESULT = 23
+        const val TASK = "tsk"
+        const val DATA = "dt"
     }
 
     override fun onCreate() {
@@ -129,9 +131,9 @@ class IQService: Service() {
                 stopForeground(true)
                 stopSelf()
             }
-            GET_INFO -> {
-                Log.d(TAG, "getInfo: starting job")
-                getInfo()
+            DATA_TRANSFER -> {
+                Log.d(TAG, "doTransfer: starting job")
+                doTransfer(intent.getIntExtra(TASK, 0), intent.getByteArrayExtra(DATA)!!)
             }
         }
         return START_NOT_STICKY
@@ -194,24 +196,24 @@ class IQService: Service() {
     }
 
     private fun start(){
-        check = CheckConnectionThread()
-        check!!.start()
+        ping = PingThread()
+        ping!!.start()
     }
 
     fun stop() {
         doAsync {
             auth?.cancel(true)
-            check?.flag = false
-            check?.interrupt()
-            check?.join()
-            check = null
+            ping?.flag = false
+            ping?.interrupt()
+            ping?.join()
+            ping = null
             connectThread.flag = false
             connectThread.interrupt()
             connectThread.join()
-            check?.flag = false
-            check?.interrupt()
-            check?.join()
-            check = null
+            ping?.flag = false
+            ping?.interrupt()
+            ping?.join()
+            ping = null
             try {
                 socket?.close()
             } catch (e: IOException) {
@@ -265,7 +267,7 @@ class IQService: Service() {
         }
     }
 
-    private inner class CheckConnectionThread: Thread(){
+    private inner class PingThread: Thread(){
         var counter = 0
         var flag = true
         override fun run() {
@@ -324,30 +326,33 @@ class IQService: Service() {
     private inner class Authorization : AsyncTask<ByteArray, Void, Boolean>() {
 
         override fun doInBackground(vararg p0: ByteArray?): Boolean {
-            check?.flag = false
+            ping?.flag = false
             Log.d(TAG, "Interrupt succeed")
-            check?.join()
+            ping?.join()
             Log.d(TAG, "Joined")
-            try{
-                val oStream = socket!!.outputStream
-                oStream.write(p0[0]!!)
-                oStream.flush()
-            }catch (e: Exception){}
-            try {
-                Thread.sleep(1_000)
-            }  catch (e: InterruptedException){
-            }
             var code = 0
-            try{
-                val iStream = socket!!.inputStream
-                if(iStream.available() > 0){
-                    code = iStream.read()
-                    clearInput(iStream)
+            for(i in 0..4){
+                try{
+                    val oStream = socket!!.outputStream
+                    oStream.write(p0[0]!!)
+                    oStream.flush()
+                }catch (e: Exception){}
+                try {
+                    Thread.sleep(250)
+                }  catch (e: InterruptedException){
                 }
-            }catch(e: Exception){}
-            check = null
-            check = CheckConnectionThread()
-            check!!.start()
+                try{
+                    val iStream = socket!!.inputStream
+                    if(iStream.available() > 0){
+                        code = iStream.read()
+                        clearInput(iStream)
+                        if(code==11) break
+                    }
+                }catch(e: Exception){}
+            }
+            ping = null
+            ping = PingThread()
+            ping!!.start()
             Log.d(TAG, "Code is $code")
             return (code == 11)
         }
@@ -365,12 +370,11 @@ class IQService: Service() {
         }
     }
 
-    private fun getInfo(){
+    private fun doTransfer(task: Int, data: ByteArray){ //an universal function for receiving/sending data
         doAsync {
-            Log.d(TAG, "Started async task getInfo()")
-            check?.flag = false
-            Log.d(TAG, "Interrupt succeed")
-            check?.join()
+            Log.d(TAG, "Started async task doTransfer()")
+            ping?.flag = false //interrupting ping thread
+            ping?.join()
             Log.d(TAG, "Joined")
             try{
                 val iStream = socket!!.inputStream
@@ -385,33 +389,39 @@ class IQService: Service() {
                 }
                 Log.d(TAG, "code is: $code")
                 if(code == 11){ //if authorization succeed
-                    val myData = byteArrayOf(0x0, 0x6e, 0x75, 0x6c, 0x6c)
+                    val myData: ByteArray = if(task==0) byteArrayOf(0x0, 0x6e, 0x75, 0x6c, 0x6c) else data
                     oStream.write(myData)
                     val crc = CRC32()
                     crc.reset()
                     crc.update(myData)
-                    sendLong(crc.value, oStream) //sending checksum
+                    sendChecksum(crc.value, oStream) //sending checksum
                     Thread.sleep(1_000)
                     Log.d(TAG, "Data available: ${iStream.available()}")
-                    if(iStream.available() > 0){
+                    if(iStream.available() > 0) {
                         val nByte = iStream.read()
                         Log.d(TAG, "nByte: $nByte")
-                        if(nByte == 11){
-                            crc.reset()
-                            crc.update(nByte)
-                            val deviceTime = (getLong(iStream, crc)-10800)*1000 //-3 h (Arduino stores MSC time, Android - UTC)
-                            if(getLong(iStream, null) == crc.value){
-                                val deviceDate = Date(deviceTime)
-                                Log.d(TAG, "Time is: $deviceDate")
-                                pi?.send(applicationContext, GOT_INFO, Intent().putExtra("date", deviceTime))
-                            } else Log.d(TAG, "The data was corrupted during sending to Android")
+                        if (nByte == 11) {
+                            if (task == 0) {
+                                crc.reset()
+                                crc.update(nByte)
+                                val tempData = ByteArray(4)
+                                iStream.read(tempData)
+                                crc.update(tempData)
+                                if (getChecksum(iStream) == crc.value) {
+                                    pi?.send(
+                                        applicationContext,
+                                        GET_INFO_RESULT,
+                                        Intent().putExtra(DATA, tempData)
+                                    )
+                                } else Log.d(TAG, "The data was corrupted during sending to Android")
+                            } else {
+                                Log.d(TAG, "Success")
+                            }
                         } else Log.d(TAG, "The data was corrupted during sending to Arduino")
                     }
                 }
             } catch (e: Exception){}
-            check = null
-            check = CheckConnectionThread()
-            check!!.start()
+            restartPing()
         }
     }
 
@@ -419,17 +429,22 @@ class IQService: Service() {
         while (str.available() > 0) str.read()
     }
 
-    private fun sendLong(sum: Long, stream: OutputStream){
+    private fun sendChecksum(sum: Long, stream: OutputStream){
         val tempSum = sum.toUInt()
         for(i in 0..3) stream.write((tempSum shr 8*i).toUByte().toInt())
     }
 
-    private fun getLong(stream: InputStream, crc32: CRC32?): Long{
+    private fun getChecksum(stream: InputStream): Long{
         val tempData = ByteArray(4)
         stream.read(tempData)
-        crc32?.update(tempData)
         var result = 0u
         for(i in 3 downTo 0) result = (result shl 8) + tempData[i].toUByte()
         return result.toLong()
+    }
+
+    private fun restartPing(){
+        ping = null
+        ping = PingThread()
+        ping!!.start()
     }
 }

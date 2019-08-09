@@ -28,6 +28,6 @@
     <string name="set_date">Set date</string>
     <string name="apply">Apply</string>
     <string name="unknown">Unknown</string>
-    <string name="iq_status">Connection Status</string>
+    <string name="iq_status">Connection Status:</string>
     <string name="set_sys_time">Set Android time</string>
 </resources>
