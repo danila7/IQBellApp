@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_quick_access"
+        android:enabled="true"
+        android:icon="@drawable/ic_clock_fast"
+        android:title="@string/quick_access"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_timetable"
+        android:enabled="true"
+        android:icon="@drawable/ic_timetable"
+        android:title="@string/timetable"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_calendar"
+        android:enabled="true"
+        android:icon="@drawable/ic_calendar_edit"
+        android:title="@string/calendar"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_battery"
+        android:enabled="true"
+        android:icon="@drawable/ic_battery_bluetooth_variant"
+        android:title="@string/battery"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:enabled="true"
+        android:icon="@drawable/ic_settings_outline"
+        android:title="@string/settings"
+        app:showAsAction="ifRoom" />
+</menu>

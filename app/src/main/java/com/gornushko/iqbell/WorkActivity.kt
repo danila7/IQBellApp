@@ -28,6 +28,20 @@ class WorkActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_work)
+        bottomNavigation.setOnNavigationItemSelectedListener { item ->
+            when(item.itemId) {
+                R.id.action_quick_access -> {
+                    toast("Quick access")
+                }
+                R.id.action_settings -> {
+                    toast("Settings")
+                }
+                R.id.action_battery -> {
+                    toast("Battery")
+                }
+            }
+            return@setOnNavigationItemSelectedListener true
+        }
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
