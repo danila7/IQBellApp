@@ -1,186 +1,159 @@
 package com.gornushko.iqbell
 
-import android.bluetooth.BluetoothAdapter
-import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import android.view.Menu
+import android.view.MenuItem
+import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.*
-import java.nio.charset.Charset
+import java.text.DateFormat
+import java.util.*
 
 @ExperimentalUnsignedTypes
-class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity() {
 
     companion object Const{
         private const val TAG = "Bluetooth Action"
-        private const val SAVED_PASSWORD = "saved_password"
-        const val KEY = "key"
+        const val SH_PREFS = "shPrefs"
     }
 
-    private var loggingIn = false
-    private var notPaired = false
-
-    private fun btOff() {
-        status.text = getText(R.string.bt_is_off)
-        bt_on_button.visibility = View.VISIBLE
-        login_button.visibility = View.GONE
-        password.visibility = View.GONE
-        progress.visibility = View.INVISIBLE
-        pass_info.visibility = View.GONE
-        save_pass.visibility = View.GONE
-        turnBtOn(bt_on_button)
-    }
-
-    private fun btOnNotPaired() {
-        notPaired = true
-        status.text = getText(R.string.not_paired)
-        bt_on_button.visibility = View.GONE
-        login_button.visibility = View.GONE
-        password.visibility = View.GONE
-        pass_info.visibility = View.GONE
-        save_pass.visibility = View.GONE
-        progress.visibility = View.INVISIBLE
-    }
-
-    private fun connected() {
-        bt_on_button.visibility = View.GONE
-        login_button.visibility = View.VISIBLE
-        password.visibility = View.VISIBLE
-        pass_info.visibility = View.VISIBLE
-        save_pass.visibility = View.VISIBLE
-        progress.visibility = View.INVISIBLE
-        status.text = getText(R.string.connected)
-        val sPref = getPreferences(Context.MODE_PRIVATE)
-        val pass = sPref.getString(SAVED_PASSWORD, "0")
-        if(pass != null && pass.length > 7
-        ){
-            password.editText!!.setText(pass)
-        }
-    }
-
-    private fun reconnecting() {
-        bt_on_button.visibility = View.GONE
-        login_button.visibility = View.GONE
-        password.visibility = View.GONE
-        progress.visibility = View.VISIBLE
-        pass_info.visibility = View.GONE
-        save_pass.visibility = View.GONE
-        status.text = getText(R.string.disconnected)
-    }
-
-    private fun authenticating() {
-        login_button.isEnabled = true
-        progress.visibility = View.VISIBLE
-
-    }
-
-    private fun authFailed() {
-        pass_info.text = getText(R.string.authorization_failed)
-        pass_info.setTextColor(Color.RED)
-        progress.visibility = View.INVISIBLE
-    }
-
-    private fun authSucceed() {
-        progress.visibility = View.GONE
-        if(save_pass.isChecked){
-            val ed = getPreferences(Context.MODE_PRIVATE).edit()
-            ed.putString(SAVED_PASSWORD, password.editText!!.text.toString())
-            ed.apply()
-            toast(getString(R.string.pass_saved))
-        }
-        loggingIn = true
-        startActivity(intentFor<WorkActivity>().newTask().clearTask().clearTop())
-    }
-
-    private fun connecting() {
-        notPaired = false
-        bt_on_button.visibility = View.GONE
-        login_button.visibility = View.GONE
-        password.visibility = View.GONE
-        progress.visibility = View.VISIBLE
-        pass_info.visibility = View.GONE
-        save_pass.visibility = View.GONE
-        status.text = getText(R.string.connecting)
-    }
-
-    private fun btNotSupported(){
-        bt_on_button.visibility = View.GONE
-        status.text = getText(R.string.bt_not_supported)
-        progress.visibility = View.GONE
-        password.visibility = View.GONE
-        login_button.visibility = View.GONE
-        pass_info.visibility = View.GONE
-        save_pass.visibility = View.GONE
-    }
+    private var goingBack = false
+    var selectedFragment: Fragment = HomeFragment()
+    var selectedItem = R.id.action_home
+    private val currentDateTime: Calendar = GregorianCalendar.getInstance()
+    private val newDateTime: Calendar = GregorianCalendar.getInstance()
+    private val df = DateFormat.getDateInstance(DateFormat.LONG)
+    private val tf = DateFormat.getTimeInstance(DateFormat.DEFAULT)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        when(intent.extras?.getInt(KEY)){
-            IQService.RECONNECTING ->{
-                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
-                reconnecting()
-            }
-            IQService.BT_OFF -> {
-                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
-                btOff()
-            }
-            else -> startService(intentFor<IQService>(IQService.ACTION to IQService.START, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
-        }
-
-
-
+        setSupportActionBar(toolbar as Toolbar?)
+        bottomNavigation.setOnNavigationItemSelectedListener(navListener)
+        supportFragmentManager.beginTransaction().add(R.id.fragment_container, HomeFragment()).commit()
+        startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
-    override fun onRestart() {
-        super.onRestart()
-        if(notPaired) startService(intentFor<IQService>(IQService.ACTION to IQService.CHECK_PAIRED))
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_toolbar, menu)
+        return super.onCreateOptionsMenu(menu)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if(!loggingIn) {
-            startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.STOP_SERVICE))
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.action_about -> startActivity(intentFor<AboutActivity>())
         }
-        Log.d(TAG, "MAIN ACTIVITY DESTROYED")
+        return super.onOptionsItemSelected(item)
+    }
+
+    private val navListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
+        if (item.itemId != selectedItem) {
+            when (item.itemId) {
+                R.id.action_home -> {
+                    selectedFragment = HomeFragment()
+                }
+                R.id.action_settings -> {
+                    selectedFragment = SettingsFragment()
+                }
+                R.id.action_battery -> {
+                    selectedFragment = BatteryFragment()
+                }
+                R.id.action_calendar -> {
+                    selectedFragment = CalendarFragment()
+                }
+                R.id.action_timetable -> {
+                    selectedFragment = TimetableFragment()
+                }
+            }
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, selectedFragment).commit()
+        selectedItem = item.itemId
+        }
+        return@OnNavigationItemSelectedListener true
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         Log.d(TAG, "Yeah! request: $requestCode result: $resultCode")
         when(resultCode){
-            IQService.CONNECTION -> connecting()
-            IQService.NOT_PAIRED -> btOnNotPaired()
-            IQService.BT_OFF -> btOff()
-            IQService.BT_NOT_SUPPORTED -> btNotSupported()
-            IQService.RECONNECTING -> reconnecting()
-            IQService.CONNECTED -> connected()
-            IQService.AUTH_PROCESS -> authenticating()
-            IQService.AUTH_FAILED -> authFailed()
-            IQService.AUTH_SUCCEED -> authSucceed()
+            IQService.GET_INFO_RESULT -> {
+                //getDeviceInfo(data!!.getByteArrayExtra(IQService.DATA)!!)
+
+            }
+            IQService.RECONNECTING, IQService.BT_OFF -> {
+                goingBack = true
+                startActivity(intentFor<LoginActivity>(LoginActivity.KEY to resultCode).newTask().clearTask().clearTop())
+            }
         }
+    }/*
+
+
+
+    fun getInfo(view: View){
+        startService(intentFor<IQService>(IQService.ACTION to IQService.DATA_TRANSFER, IQService.TASK to 0, IQService.DATA to ByteArray(1)))
     }
 
-    fun login(view: View) {
-        if (password.editText!!.text. toString().length == 8) {
-            val pass = password.editText!!.text.toString().toByteArray(Charset.forName("ASCII"))
-            startService(intentFor<IQService>(IQService.ACTION to IQService.AUTH, IQService.PASSWORD to pass))
-        } else authFailed()
+    private fun getDeviceInfo(data: ByteArray){
+        currentDateTime.timeInMillis = (getLongFromByteArray(data) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
+        current_time.text = tf.format(currentDateTime.time)
+        current_date.text = df.format(currentDateTime.time)
+
     }
 
-    fun turnBtOn(view: View) = startActivity(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+    fun timePicker(view: View){
+        val dialog = TimePickerDialog(this, android.R.style.ThemeOverlay_Material_Dialog,
+            TimePickerDialog.OnTimeSetListener{_, mHour, mMinute -> run{
+                newDateTime.set(Calendar.HOUR_OF_DAY, mHour)
+                newDateTime.set(Calendar.MINUTE, mMinute)
+                newDateTime.set(Calendar.SECOND, 0)
+                new_time.text = tf.format(newDateTime.time)
+            }}, currentDateTime.get(Calendar.HOUR_OF_DAY), currentDateTime.get(Calendar.MINUTE), true)
+        dialog.show()
+    }
 
-    fun savePass(view: View){
-        if(!save_pass.isChecked){
-            val ed = getPreferences(Context.MODE_PRIVATE).edit()
-            ed.putString(SAVED_PASSWORD, "0")
-            ed.apply()
-            toast(getString(R.string.pass_deleted))
-        }
+    fun datePicker(view: View){
+        val dialog = DatePickerDialog(this, android.R.style.ThemeOverlay_Material_Dialog,
+            DatePickerDialog.OnDateSetListener{_, mYear, mMonth, mDay -> run{
+                newDateTime.set(Calendar.YEAR, mYear)
+                newDateTime.set(Calendar.MONTH, mMonth)
+                newDateTime.set(Calendar.DAY_OF_MONTH, mDay)
+                new_date.text = df.format(newDateTime.time)
+            }}, currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH),
+            currentDateTime.get(Calendar.DAY_OF_MONTH))
+        dialog.show()
+    }
+
+    fun sendTime(view: View){
+        val timeForArduino = newDateTime.timeInMillis / 1_000 + 10_800
+        val data = ByteArray(1){0x4} + makeByteArrayFromLong(timeForArduino)
+        startService(intentFor<IQService>(IQService.ACTION to IQService.DATA_TRANSFER, IQService.TASK to 4, IQService.DATA to data))
+    }
+
+    fun setSysTime(view: View){
+        newDateTime.timeInMillis = System.currentTimeMillis()
+        new_date.text = df.format(newDateTime.time)
+        new_time.text = tf.format(Date())
+    }
+
+    private fun getLongFromByteArray(data: ByteArray): Long{
+        var result = 0u
+        for(i in 3 downTo 0) result = (result shl 8) + data[i].toUByte()
+        return result.toLong()
+    }
+
+    private fun makeByteArrayFromLong(sum: Long): ByteArray{
+        val result = ByteArray(4)
+        val tempSum = sum.toUInt()
+        for(i in 0..3) result[i] = (tempSum shr 8*i).toUByte().toByte()
+        return result
+    }*/
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if(!goingBack) startService(intentFor<IQService>(IQService.ACTION to IQService.STOP_SERVICE))
     }
 }

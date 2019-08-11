@@ -32,7 +32,10 @@
     <string name="set_sys_time">Установить время Android</string>
     <string name="calendar">Календарь</string>
     <string name="battery">Батарея</string>
-    <string name="quick_access">Быстрый Доступ</string>
     <string name="settings">Настройки</string>
     <string name="timetable">Расписание</string>
+    <string name="home">Главная</string>
+    <string name="about">О приложении</string>
+    <string name="authenticating">Выполняется вход</string>
+    <string name="auto_auth_switch">Автоматический вход</string>
 </resources>

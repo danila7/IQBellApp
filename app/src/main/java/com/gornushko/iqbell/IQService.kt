@@ -21,7 +21,9 @@ import java.lang.Exception
 import java.util.*
 import android.app.NotificationManager
 import android.app.NotificationChannel
+import org.jetbrains.anko.defaultSharedPreferences
 import java.io.OutputStream
+import java.nio.charset.Charset
 import java.util.zip.CRC32
 
 
@@ -35,6 +37,7 @@ class IQService: Service() {
     private var socket: BluetoothSocket? = null
     private var auth: Authorization? = null
     private lateinit var currentPassword: ByteArray
+    private var isAuthorized = false
 
     init {
         connectThread = ConnectThread()
@@ -66,6 +69,7 @@ class IQService: Service() {
         const val GET_INFO_RESULT = 23
         const val TASK = "tsk"
         const val DATA = "dt"
+        const val AUTO_AUTH = "aa"
     }
 
     override fun onCreate() {
@@ -133,7 +137,7 @@ class IQService: Service() {
             }
             DATA_TRANSFER -> {
                 Log.d(TAG, "doTransfer: starting job")
-                doTransfer(intent.getIntExtra(TASK, 0), intent.getByteArrayExtra(DATA)!!)
+                sendData(intent.getIntExtra(TASK, 0), intent.getByteArrayExtra(DATA)!!)
             }
         }
         return START_NOT_STICKY
@@ -248,6 +252,11 @@ class IQService: Service() {
                     socket = mmSocket
                     pi?.send(CONNECTED)
                     updateNotification(getString(R.string.connected), false)
+                    val sPref = getSharedPreferences(MainActivity.SH_PREFS, Context.MODE_PRIVATE)
+                    val pass = sPref.getString(LoginActivity.SAVED_PASSWORD, "0")
+                    if(sPref.getString(AUTO_AUTH, "0") == "1" && pass != null && pass.length > 7){
+                        authorize(pass.toByteArray(Charset.forName("ASCII")))
+                    }
                     break
                 } else {
                     pi?.send(RECONNECTING)
@@ -282,15 +291,57 @@ class IQService: Service() {
                         try {
                             val oStream = socket!!.outputStream
                             val iStream = socket!!.inputStream
-                            oStream.write(1)
-                            oStream.flush()
-                            sleep(100)
-                            if (iStream.available() > 0) {
-                                if (iStream.read() == 5) {
-                                    counter = 0
+                            if(!isAuthorized){
+                                oStream.write(1)
+                                oStream.flush()
+                                sleep(100)
+                                if (iStream.available() > 0) {
+                                    if (iStream.read() == 5) {
+                                        Log.d(TAG, "NA Connection OK")
+                                    } else counter++
+                                    iStream.skip(iStream.available().toLong())
                                 } else counter++
-                                iStream.skip(iStream.available().toLong())
-                            } else counter++
+                            } else {
+                                Log.d(TAG, "isAuth")
+                                oStream?.write(currentPassword)  //authorization
+                                oStream?.flush()
+                                sleep(100) //waiting for answer
+                                var code = 0
+                                if(iStream.available() > 0) {
+                                    code = iStream.read() //reading the answer
+                                    clearInput(iStream)
+                                }
+                                if(code == 11){ //if authorization succeed
+                                    val myData: ByteArray = byteArrayOf(0x0, 0x6e, 0x75, 0x6c, 0x6c)
+                                    oStream.write(myData)
+                                    val crc = CRC32()
+                                    crc.reset()
+                                    crc.update(myData)
+                                    sendChecksum(crc.value, oStream) //sending checksum
+                                    sleep(150)
+                                    Log.d(TAG, "Data available: ${iStream.available()}")
+                                    if(iStream.available() > 0) {
+                                        val nByte = iStream.read()
+                                        Log.d(TAG, "nByte: $nByte")
+                                        if (nByte == 11) {
+                                            crc.reset()
+                                            crc.update(nByte)
+                                            val tempData = ByteArray(4)
+                                            iStream.read(tempData)
+                                            crc.update(tempData)
+                                            if (getChecksum(iStream) == crc.value) {
+                                                counter = 0
+                                                Log.d(TAG, "A Connection OK"
+                                                /*pi?.send(
+                                                    applicationContext,
+                                                    GET_INFO_RESULT,
+                                                    Intent().putExtra(DATA, tempData)*/
+                                                )
+                                            } else counter++
+                                        } else counter++
+                                    }
+                                }
+                            }
                             if (counter == 3) {
                                 counter = 0
                                 pi?.send(RECONNECTING)
@@ -338,7 +389,7 @@ class IQService: Service() {
                     oStream.flush()
                 }catch (e: Exception){}
                 try {
-                    Thread.sleep(250)
+                    Thread.sleep(100)
                 }  catch (e: InterruptedException){
                 }
                 try{
@@ -365,12 +416,15 @@ class IQService: Service() {
         override fun onPostExecute(result: Boolean?) {
             super.onPostExecute(result)
             pi?.send(if(result!!) AUTH_SUCCEED else AUTH_FAILED)
-            if(result!!) updateNotification(getString(R.string.authorized), false)
+            if(result!!){
+                updateNotification(getString(R.string.authorized), false)
+                isAuthorized = true
+            }
 
         }
     }
 
-    private fun doTransfer(task: Int, data: ByteArray){ //an universal function for receiving/sending data
+    private fun sendData(task: Int, data: ByteArray){ //an universal function for receiving/sending data
         doAsync {
             Log.d(TAG, "Started async task doTransfer()")
             ping?.flag = false //interrupting ping thread
@@ -389,35 +443,18 @@ class IQService: Service() {
                 }
                 Log.d(TAG, "code is: $code")
                 if(code == 11){ //if authorization succeed
-                    val myData: ByteArray = if(task==0) byteArrayOf(0x0, 0x6e, 0x75, 0x6c, 0x6c) else data
-                    oStream.write(myData)
+                    oStream.write(data)
                     val crc = CRC32()
                     crc.reset()
-                    crc.update(myData)
+                    crc.update(data)
                     sendChecksum(crc.value, oStream) //sending checksum
-                    Thread.sleep(1_000)
+                    Thread.sleep(150)
                     Log.d(TAG, "Data available: ${iStream.available()}")
                     if(iStream.available() > 0) {
                         val nByte = iStream.read()
                         Log.d(TAG, "nByte: $nByte")
-                        if (nByte == 11) {
-                            if (task == 0) {
-                                crc.reset()
-                                crc.update(nByte)
-                                val tempData = ByteArray(4)
-                                iStream.read(tempData)
-                                crc.update(tempData)
-                                if (getChecksum(iStream) == crc.value) {
-                                    pi?.send(
-                                        applicationContext,
-                                        GET_INFO_RESULT,
-                                        Intent().putExtra(DATA, tempData)
-                                    )
-                                } else Log.d(TAG, "The data was corrupted during sending to Android")
-                            } else {
-                                Log.d(TAG, "Success")
-                            }
-                        } else Log.d(TAG, "The data was corrupted during sending to Arduino")
+                        if (nByte == 11) Log.d(TAG, "Success")
+                        else Log.d(TAG, "The data was corrupted during sending to Arduino")
                     }
                 }
             } catch (e: Exception){}
@@ -432,6 +469,7 @@ class IQService: Service() {
     private fun sendChecksum(sum: Long, stream: OutputStream){
         val tempSum = sum.toUInt()
         for(i in 0..3) stream.write((tempSum shr 8*i).toUByte().toInt())
+        stream.flush()
     }
 
     private fun getChecksum(stream: InputStream): Long{
