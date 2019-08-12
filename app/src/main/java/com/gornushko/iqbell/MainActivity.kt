@@ -13,6 +13,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.*
 import java.text.DateFormat
 import java.util.*
+import kotlin.concurrent.timerTask
 
 @ExperimentalUnsignedTypes
 class MainActivity : AppCompatActivity() {
@@ -23,19 +24,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var goingBack = false
-    var selectedFragment: Fragment = HomeFragment()
-    var selectedItem = R.id.action_home
     private val currentDateTime: Calendar = GregorianCalendar.getInstance()
     private val newDateTime: Calendar = GregorianCalendar.getInstance()
     private val df = DateFormat.getDateInstance(DateFormat.LONG)
     private val tf = DateFormat.getTimeInstance(DateFormat.DEFAULT)
+
+    private val homeFragment = HomeFragment()
+    private val timetableFragment = TimetableFragment()
+    private val calendarFragment = CalendarFragment()
+    private val batteryFragment = BatteryFragment()
+    private val settingsFragment = SettingsFragment()
+    private var active: Fragment = homeFragment
+    private val fm = supportFragmentManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar as Toolbar?)
         bottomNavigation.setOnNavigationItemSelectedListener(navListener)
-        supportFragmentManager.beginTransaction().add(R.id.fragment_container, HomeFragment()).commit()
+        fm.beginTransaction().add(R.id.fragment_container, settingsFragment, "5").hide(settingsFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, batteryFragment, "4").hide(batteryFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, calendarFragment, "3").hide(calendarFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, timetableFragment, "2").hide(timetableFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
+
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
@@ -52,26 +64,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val navListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
-        if (item.itemId != selectedItem) {
-            when (item.itemId) {
-                R.id.action_home -> {
-                    selectedFragment = HomeFragment()
-                }
-                R.id.action_settings -> {
-                    selectedFragment = SettingsFragment()
-                }
-                R.id.action_battery -> {
-                    selectedFragment = BatteryFragment()
-                }
-                R.id.action_calendar -> {
-                    selectedFragment = CalendarFragment()
-                }
-                R.id.action_timetable -> {
-                    selectedFragment = TimetableFragment()
-                }
+        when (item.itemId) {
+            R.id.action_home -> {
+                fm.beginTransaction().hide(active).show(homeFragment).commit()
+                active = homeFragment
             }
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container, selectedFragment).commit()
-        selectedItem = item.itemId
+            R.id.action_settings -> {
+                fm.beginTransaction().hide(active).show(settingsFragment).commit()
+                active = settingsFragment
+            }
+            R.id.action_battery -> {
+                fm.beginTransaction().hide(active).show(batteryFragment).commit()
+                active = batteryFragment
+            }
+            R.id.action_calendar -> {
+                fm.beginTransaction().hide(active).show(calendarFragment).commit()
+                active = calendarFragment
+            }
+            R.id.action_timetable -> {
+                fm.beginTransaction().hide(active).show(timetableFragment).commit()
+                active = timetableFragment
+            }
         }
         return@OnNavigationItemSelectedListener true
     }
