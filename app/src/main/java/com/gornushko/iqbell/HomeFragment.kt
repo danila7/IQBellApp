@@ -11,17 +11,16 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import kotlinx.android.synthetic.main.fragment_home.*
+import java.text.DateFormat
+import java.util.*
 
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+private val dateTime: Calendar = GregorianCalendar.getInstance()
+private val dtf = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.DEFAULT)
+private val df = DateFormat.getDateInstance(DateFormat.LONG)
+private val tf = DateFormat.getTimeInstance(DateFormat.DEFAULT)
+private lateinit var startData: ByteArray
 
-/**
- * A simple [Fragment] subclass.
- *
- */
 @ExperimentalUnsignedTypes
 class HomeFragment : Fragment() {
 
@@ -38,54 +37,24 @@ class HomeFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
-    override fun onAttach(context: Context?) {
-        super.onAttach(context)
-        Log.d(TAG, "onAttach")
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        Log.d(TAG, "onCreate")
-        Log.d("SETTINGS", activity!!.getSharedPreferences(IQService.AUTO_AUTH, Context.MODE_PRIVATE).getString(IQService.AUTO_AUTH,"no value") ?: "no val")
-    }
-
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        Log.d(TAG, "onActivityCreated")
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.d(TAG, "onStart")
-    }
-
-    override fun onResume() {
         super.onResume()
-        Log.d(TAG, "onResume")
+        updateTime(startData)
     }
 
-    override fun onPause() {
-        super.onPause()
-        Log.d(TAG, "onPause")
+    fun setStartData(data: ByteArray){
+        startData = data
     }
 
-    override fun onStop() {
-        super.onStop()
-        Log.d(TAG, "onStop")
+    fun updateTime(timeData: ByteArray){
+        dateTime.timeInMillis = (getLongFromByteArray(timeData) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
+        time.text = dtf.format(dateTime.time)
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        Log.d(TAG, "onDestroyView")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d(TAG, "onDestroy")
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        Log.d(TAG, "onDetach")
+    private fun getLongFromByteArray(data: ByteArray): Long{
+        var result = 0u
+        for(i in 3 downTo 0) result = (result shl 8) + data[i].toUByte()
+        return result.toLong()
     }
 }

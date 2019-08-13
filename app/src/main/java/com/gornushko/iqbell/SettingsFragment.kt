@@ -32,15 +32,4 @@ class SettingsFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_settings, container, false)
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        autoAuth.isChecked = activity!!.getSharedPreferences(MainActivity.SH_PREFS, Context.MODE_PRIVATE).getString(IQService.AUTO_AUTH, "0") == "1"
-        autoAuth.setOnClickListener {
-            val ed = activity!!.getSharedPreferences(MainActivity.SH_PREFS, Context.MODE_PRIVATE).edit()
-            ed.putString(IQService.AUTO_AUTH, if(autoAuth.isChecked) "1" else "0")
-            ed.apply()
-        }
-    }
-
-
 }

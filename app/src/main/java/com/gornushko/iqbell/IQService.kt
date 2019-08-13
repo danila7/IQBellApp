@@ -1,6 +1,5 @@
 package com.gornushko.iqbell
 
-import android.annotation.SuppressLint
 import android.app.*
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -10,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
-import android.os.AsyncTask
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -21,9 +19,7 @@ import java.lang.Exception
 import java.util.*
 import android.app.NotificationManager
 import android.app.NotificationChannel
-import org.jetbrains.anko.defaultSharedPreferences
 import java.io.OutputStream
-import java.nio.charset.Charset
 import java.util.zip.CRC32
 
 
@@ -32,18 +28,18 @@ class IQService: Service() {
 
     private var pi: PendingIntent? = null
     private var btAdapter: BluetoothAdapter? = null
-    private var connectThread: ConnectThread
-    private var ping: PingThread? = null
+    private var connectThread: StartConnectionThread
+    private var ping: ConnectionThread? = null
     private var socket: BluetoothSocket? = null
-    private var auth: Authorization? = null
-    private lateinit var currentPassword: ByteArray
-    private var isAuthorized = false
+    private lateinit var oStream: OutputStream
+    private lateinit var iStream: InputStream
 
     init {
-        connectThread = ConnectThread()
+        connectThread = StartConnectionThread()
     }
 
-    companion object{
+    companion object {
+        private val PASSWORD = byteArrayOf(0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38)
         const val address = "C2:2C:05:04:04:FA"
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         private const val TAG = "My Bluetooth Service"
@@ -58,39 +54,30 @@ class IQService: Service() {
         const val RECONNECTING = 5
         const val CONNECTED = 6
         const val NOT_PAIRED = 4
-        const val AUTH = 7
-        const val PASSWORD = "pass"
-        const val AUTH_SUCCEED = 12
-        const val AUTH_FAILED = 10
-        const val AUTH_PROCESS = 11
         const val STOP_SERVICE = 404
         const val NEW_PENDING_INTENT = 301
         const val DATA_TRANSFER = 22
-        const val GET_INFO_RESULT = 23
-        const val TASK = "tsk"
+        const val DEVICE_STATE = 23
         const val DATA = "dt"
         const val AUTO_AUTH = "aa"
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "onCreate")
-
         btAdapter = BluetoothAdapter.getDefaultAdapter()
         val btIntent = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         registerReceiver(mBroadcastReceiver, btIntent)
     }
 
-    private val mBroadcastReceiver = object: BroadcastReceiver() {
+    private val mBroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            when(intent!!.action){
+            when (intent!!.action) {
                 BluetoothAdapter.ACTION_STATE_CHANGED -> {
-                    when(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)){
+                    when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                         BluetoothAdapter.STATE_ON -> checkPaired()
                         BluetoothAdapter.STATE_TURNING_OFF -> {
                             stop()
                             pi?.send(BT_OFF)
-                            Log.d(TAG, "BT is off!")
                             updateNotification(getString(R.string.preparing), true)
                         }
                     }
@@ -101,26 +88,17 @@ class IQService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy")
         unregisterReceiver(mBroadcastReceiver)
-        Log.d(TAG, "Destroyed")
-
-    }
-
-    override fun onUnbind(intent: Intent?): Boolean {
-        Log.d(TAG, "onUnbind")
-        return super.onUnbind(intent)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "Start command")
-        when(intent!!.getIntExtra(ACTION, START)){
-            START ->{
+        when (intent!!.getIntExtra(ACTION, START)) {
+            START -> {
                 pi = intent.getParcelableExtra(PENDING_INTENT)
                 if (btAdapter == null) {
                     pi?.send(BT_NOT_SUPPORTED)
                     stopSelf()
-                } else{
+                } else {
                     updateNotification(getString(R.string.preparing), true)
                     checkBt()
                 }
@@ -128,22 +106,20 @@ class IQService: Service() {
             NEW_PENDING_INTENT -> {
                 pi = intent.getParcelableExtra(PENDING_INTENT)
             }
-            CHECK_PAIRED -> if(btAdapter!!.isEnabled) checkPaired()
-            AUTH -> authorize(intent.getByteArrayExtra(PASSWORD)!!)
+            CHECK_PAIRED -> if (btAdapter!!.isEnabled) checkPaired()
             STOP_SERVICE -> {
                 stop()
                 stopForeground(true)
                 stopSelf()
             }
             DATA_TRANSFER -> {
-                Log.d(TAG, "doTransfer: starting job")
-                sendData(intent.getIntExtra(TASK, 0), intent.getByteArrayExtra(DATA)!!)
+                //sendData(intent.getIntExtra(TASK, 0), intent.getByteArrayExtra(DATA)!!)
             }
         }
         return START_NOT_STICKY
     }
 
-    private fun updateNotification(text: String, progress: Boolean){
+    private fun updateNotification(text: String, progress: Boolean) {
         createNotificationsChannel()
         val builder = NotificationCompat.Builder(this, NOTIFICATIONS_CHANNEL)
             .setSmallIcon(R.drawable.ic_bell_outline)
@@ -152,12 +128,12 @@ class IQService: Service() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setSound(null, AudioManager.STREAM_RING)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
-        if(progress) builder.setProgress(0 ,0, true)
+        if (progress) builder.setProgress(0, 0, true)
         val notification = builder.build()
         startForeground(1, notification)
     }
 
-    private fun createNotificationsChannel(){
+    private fun createNotificationsChannel() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
@@ -177,36 +153,33 @@ class IQService: Service() {
         return null
     }
 
-    private fun checkBt(){
-        if (!btAdapter!!.isEnabled){
+    private fun checkBt() {
+        if (!btAdapter!!.isEnabled) {
             pi?.send(BT_OFF)
             updateNotification(getString(R.string.preparing), true)
-        }
-        else checkPaired()
+        } else checkPaired()
     }
 
-    fun checkPaired(){
+    fun checkPaired() {
         var isPaired = false
         for (device: BluetoothDevice in btAdapter!!.bondedDevices) if (device.address == address) isPaired = true
-        if (isPaired){
+        if (isPaired) {
             pi?.send(CONNECTION)
             updateNotification(getString(R.string.connecting), true)
             start()
-        }
-        else{
+        } else {
             pi?.send(NOT_PAIRED)
             updateNotification(getString(R.string.preparing), true)
         }
     }
 
-    private fun start(){
-        ping = PingThread()
+    private fun start() {
+        ping = ConnectionThread()
         ping!!.start()
     }
 
     fun stop() {
         doAsync {
-            auth?.cancel(true)
             ping?.flag = false
             ping?.interrupt()
             ping?.join()
@@ -220,14 +193,12 @@ class IQService: Service() {
             ping = null
             try {
                 socket?.close()
-            } catch (e: IOException) {
-                Log.e(TAG, "Could not close the client socket: " + e.message)
-            }
+            } catch (e: IOException) {}
             Log.d(TAG, "FINISHED")
         }
     }
 
-    private inner class ConnectThread: Thread() {
+    private inner class StartConnectionThread : Thread() {
 
         var flag = true
 
@@ -235,32 +206,29 @@ class IQService: Service() {
             // Cancel discovery because it otherwise slows down the connection.
             btAdapter?.cancelDiscovery()
             while (flag) {
-                Log.d(TAG, "Attempt to connect...")
-                var mmSocket: BluetoothSocket?
-                try{
-                    mmSocket = btAdapter?.getRemoteDevice(address)?.createRfcommSocketToServiceRecord(MY_UUID) ?: break
-                } catch (e: Exception){ break }
+                var mmSocket: BluetoothSocket
+                try {
+                    mmSocket = btAdapter?.getRemoteDevice(address)?.createRfcommSocketToServiceRecord(MY_UUID) ?: continue
+                } catch (e: Exception) {continue}
                 try {
                     // Connect to the remote device through the socket. This call blocks
                     // until it succeeds or throws an exception.
                     mmSocket.connect()
-                    Log.d(TAG, "Connected?")
-                } catch (e: IOException) {
-                    Log.d(TAG, "An error occurred during connection process: " + e.message)
-                }
+                } catch (e: IOException) {}
                 if (mmSocket.isConnected) {
                     socket = mmSocket
-                    pi?.send(CONNECTED)
-                    updateNotification(getString(R.string.connected), false)
-                    val sPref = getSharedPreferences(MainActivity.SH_PREFS, Context.MODE_PRIVATE)
-                    val pass = sPref.getString(LoginActivity.SAVED_PASSWORD, "0")
-                    if(sPref.getString(AUTO_AUTH, "0") == "1" && pass != null && pass.length > 7){
-                        authorize(pass.toByteArray(Charset.forName("ASCII")))
+                    iStream = mmSocket.inputStream
+                    oStream = mmSocket.outputStream
+                    var tempData: ByteArray?
+                    while (true){
+                        tempData = getData()
+                        if(tempData != null) break
                     }
+                    updateNotification(getString(R.string.connected), false)
+                    pi?.send(applicationContext, CONNECTED, Intent().putExtra(DATA, tempData))
                     break
                 } else {
                     pi?.send(RECONNECTING)
-                    Log.d(TAG, "reconnecting")
                     updateNotification(getString(R.string.connecting), true)
                     try {
                         mmSocket.close()
@@ -269,161 +237,51 @@ class IQService: Service() {
                         Log.e(TAG, "Could not close the client socket: " + e.message)
                     }
                 }
-                try{
-                    sleep(1_000)
-                } catch (e: InterruptedException){}
+                try {
+                    sleep(200)
+                } catch (e: InterruptedException) {}
             }
         }
     }
 
-    private inner class PingThread: Thread(){
+    private inner class ConnectionThread : Thread() {
         var counter = 0
         var flag = true
         override fun run() {
             while (flag) {
                 if (!connectThread.isAlive) {
                     if (socket?.isConnected != true) {
-                        Log.d(TAG, "socket not equals true!")
-                        connectThread = ConnectThread()
+                        connectThread = StartConnectionThread()
                         connectThread.start()
-                    }
-                    if (socket?.isConnected == true) {
+                    } else {
                         try {
-                            val oStream = socket!!.outputStream
-                            val iStream = socket!!.inputStream
-                            if(!isAuthorized){
-                                oStream.write(1)
-                                oStream.flush()
-                                sleep(100)
-                                if (iStream.available() > 0) {
-                                    if (iStream.read() == 5) {
-                                        Log.d(TAG, "NA Connection OK")
-                                    } else counter++
-                                    iStream.skip(iStream.available().toLong())
-                                } else counter++
-                            } else {
-                                Log.d(TAG, "isAuth")
-                                oStream?.write(currentPassword)  //authorization
-                                oStream?.flush()
-                                sleep(100) //waiting for answer
-                                var code = 0
-                                if(iStream.available() > 0) {
-                                    code = iStream.read() //reading the answer
-                                    clearInput(iStream)
-                                }
-                                if(code == 11){ //if authorization succeed
-                                    val myData: ByteArray = byteArrayOf(0x0, 0x6e, 0x75, 0x6c, 0x6c)
-                                    oStream.write(myData)
-                                    val crc = CRC32()
-                                    crc.reset()
-                                    crc.update(myData)
-                                    sendChecksum(crc.value, oStream) //sending checksum
-                                    sleep(150)
-                                    Log.d(TAG, "Data available: ${iStream.available()}")
-                                    if(iStream.available() > 0) {
-                                        val nByte = iStream.read()
-                                        Log.d(TAG, "nByte: $nByte")
-                                        if (nByte == 11) {
-                                            crc.reset()
-                                            crc.update(nByte)
-                                            val tempData = ByteArray(4)
-                                            iStream.read(tempData)
-                                            crc.update(tempData)
-                                            if (getChecksum(iStream) == crc.value) {
-                                                counter = 0
-                                                Log.d(TAG, "A Connection OK"
-                                                /*pi?.send(
-                                                    applicationContext,
-                                                    GET_INFO_RESULT,
-                                                    Intent().putExtra(DATA, tempData)*/
-                                                )
-                                            } else counter++
-                                        } else counter++
-                                    }
-                                }
-                            }
+                            val data = getData()
+                            if (data != null) { //if authorization succeed
+                                counter = 0
+                                pi?.send(applicationContext, DEVICE_STATE, Intent().putExtra(DATA, data))
+                            } else counter++
                             if (counter == 3) {
                                 counter = 0
                                 pi?.send(RECONNECTING)
                                 updateNotification(getString(R.string.connecting), true)
-                                Log.d(TAG, "counter!!!")
-                                connectThread = ConnectThread()
+                                connectThread = StartConnectionThread()
                                 connectThread.start()
                             }
                         } catch (e: Exception) {
                             pi?.send(RECONNECTING)
                             updateNotification(getString(R.string.connecting), true)
-                            connectThread = ConnectThread()
+                            connectThread = StartConnectionThread()
                             connectThread.start()
                         }
                     }
                 }
                 try {
-                    sleep(400)
-                } catch (e: InterruptedException) {
-                    Log.d(TAG, "Interrupted")
-                }
+                    sleep(670)
+                } catch (e: InterruptedException) {}
             }
         }
     }
-
-    private fun authorize(pass: ByteArray){
-        auth = Authorization()
-        currentPassword = pass
-        auth?.execute(pass)
-    }
-
-    @SuppressLint("StaticFieldLeak")
-    private inner class Authorization : AsyncTask<ByteArray, Void, Boolean>() {
-
-        override fun doInBackground(vararg p0: ByteArray?): Boolean {
-            ping?.flag = false
-            Log.d(TAG, "Interrupt succeed")
-            ping?.join()
-            Log.d(TAG, "Joined")
-            var code = 0
-            for(i in 0..4){
-                try{
-                    val oStream = socket!!.outputStream
-                    oStream.write(p0[0]!!)
-                    oStream.flush()
-                }catch (e: Exception){}
-                try {
-                    Thread.sleep(100)
-                }  catch (e: InterruptedException){
-                }
-                try{
-                    val iStream = socket!!.inputStream
-                    if(iStream.available() > 0){
-                        code = iStream.read()
-                        clearInput(iStream)
-                        if(code==11) break
-                    }
-                }catch(e: Exception){}
-            }
-            ping = null
-            ping = PingThread()
-            ping!!.start()
-            Log.d(TAG, "Code is $code")
-            return (code == 11)
-        }
-
-        override fun onPreExecute() {
-            super.onPreExecute()
-            pi?.send(AUTH_PROCESS)
-        }
-
-        override fun onPostExecute(result: Boolean?) {
-            super.onPostExecute(result)
-            pi?.send(if(result!!) AUTH_SUCCEED else AUTH_FAILED)
-            if(result!!){
-                updateNotification(getString(R.string.authorized), false)
-                isAuthorized = true
-            }
-
-        }
-    }
-
+/*
     private fun sendData(task: Int, data: ByteArray){ //an universal function for receiving/sending data
         doAsync {
             Log.d(TAG, "Started async task doTransfer()")
@@ -433,7 +291,7 @@ class IQService: Service() {
             try{
                 val iStream = socket!!.inputStream
                 val oStream = socket!!.outputStream
-                oStream?.write(currentPassword)  //authorization
+                oStream?.write(PASSWORD)  //authorization
                 oStream?.flush()
                 Thread.sleep(100) //waiting for answer
                 var code = 0
@@ -460,29 +318,66 @@ class IQService: Service() {
             } catch (e: Exception){}
             restartPing()
         }
-    }
+    }*/
 
-    private fun clearInput(str: InputStream){
+    private fun clearInput(str: InputStream) {
         while (str.available() > 0) str.read()
     }
 
-    private fun sendChecksum(sum: Long, stream: OutputStream){
+    private fun sendChecksum(sum: Long, stream: OutputStream) {
         val tempSum = sum.toUInt()
-        for(i in 0..3) stream.write((tempSum shr 8*i).toUByte().toInt())
+        for (i in 0..3) stream.write((tempSum shr 8 * i).toUByte().toInt())
         stream.flush()
     }
 
-    private fun getChecksum(stream: InputStream): Long{
+    private fun getChecksum(stream: InputStream): Long {
         val tempData = ByteArray(4)
         stream.read(tempData)
         var result = 0u
-        for(i in 3 downTo 0) result = (result shl 8) + tempData[i].toUByte()
+        for (i in 3 downTo 0) result = (result shl 8) + tempData[i].toUByte()
         return result.toLong()
     }
-
+/*
     private fun restartPing(){
         ping = null
-        ping = PingThread()
+        ping = ConnectionThread()
         ping!!.start()
+    }*/
+
+    private fun connect(): Boolean {
+        oStream.write(PASSWORD)  //authorization
+        oStream.flush()
+        try{
+            Thread.sleep(100) //waiting for answer
+        }catch (e: InterruptedException){}
+        var code = 0
+        if (iStream.available() > 0) {
+            code = iStream.read() //reading the answer
+            clearInput(iStream)
+        }
+        return code == 11
+    }
+
+    private fun getData(): ByteArray? {
+        if(!connect()) return null
+        val myData: ByteArray = byteArrayOf(0x0, 0x6e, 0x75, 0x6c, 0x6c)
+        oStream.write(myData)
+        val crc = CRC32()
+        crc.reset()
+        crc.update(myData)
+        sendChecksum(crc.value, oStream) //sending checksum
+        Thread.sleep(200)
+        if (iStream.available() > 0) {
+            val nByte = iStream.read()
+            if (nByte == 11) {
+                crc.reset()
+                crc.update(nByte)
+                val tempData = ByteArray(4)
+                iStream.read(tempData)
+                crc.update(tempData)
+                if (getChecksum(iStream) == crc.value) return tempData
+            }
+        }
+        return null
     }
 }

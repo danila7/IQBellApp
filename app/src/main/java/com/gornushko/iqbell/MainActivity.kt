@@ -13,7 +13,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.*
 import java.text.DateFormat
 import java.util.*
-import kotlin.concurrent.timerTask
 
 @ExperimentalUnsignedTypes
 class MainActivity : AppCompatActivity() {
@@ -21,13 +20,10 @@ class MainActivity : AppCompatActivity() {
     companion object Const{
         private const val TAG = "Bluetooth Action"
         const val SH_PREFS = "shPrefs"
+        const val START_DATA = "start_d"
     }
 
     private var goingBack = false
-    private val currentDateTime: Calendar = GregorianCalendar.getInstance()
-    private val newDateTime: Calendar = GregorianCalendar.getInstance()
-    private val df = DateFormat.getDateInstance(DateFormat.LONG)
-    private val tf = DateFormat.getTimeInstance(DateFormat.DEFAULT)
 
     private val homeFragment = HomeFragment()
     private val timetableFragment = TimetableFragment()
@@ -47,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         fm.beginTransaction().add(R.id.fragment_container, calendarFragment, "3").hide(calendarFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, timetableFragment, "2").hide(timetableFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
-
+        homeFragment.setStartData(intent.getByteArrayExtra(START_DATA)!!)
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
@@ -91,15 +87,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.d(TAG, "Yeah! request: $requestCode result: $resultCode")
         when(resultCode){
-            IQService.GET_INFO_RESULT -> {
-                //getDeviceInfo(data!!.getByteArrayExtra(IQService.DATA)!!)
+            IQService.DEVICE_STATE -> {
+                homeFragment.updateTime(data!!.getByteArrayExtra(IQService.DATA)!!)
 
             }
             IQService.RECONNECTING, IQService.BT_OFF -> {
                 goingBack = true
-                startActivity(intentFor<LoginActivity>(LoginActivity.KEY to resultCode).newTask().clearTask().clearTop())
+                startActivity(intentFor<ConnectActivity>(ConnectActivity.KEY to resultCode).newTask().clearTask().clearTop())
             }
         }
     }/*
@@ -152,11 +147,7 @@ class MainActivity : AppCompatActivity() {
         new_time.text = tf.format(Date())
     }
 
-    private fun getLongFromByteArray(data: ByteArray): Long{
-        var result = 0u
-        for(i in 3 downTo 0) result = (result shl 8) + data[i].toUByte()
-        return result.toLong()
-    }
+
 
     private fun makeByteArrayFromLong(sum: Long): ByteArray{
         val result = ByteArray(4)
