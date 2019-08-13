@@ -1,16 +1,15 @@
 package com.gornushko.iqbell
 
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import kotlinx.android.synthetic.main.fragment_home.*
+import org.jetbrains.anko.intentFor
+import org.jetbrains.anko.support.v4.intentFor
 import java.text.DateFormat
 import java.util.*
 
@@ -28,11 +27,7 @@ class HomeFragment : Fragment() {
         private const val TAG = "HomeFragment"
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        Log.d(TAG, "onCreateView")
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false)
     }
@@ -40,16 +35,17 @@ class HomeFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         super.onResume()
-        updateTime(startData)
+        updateData(startData)
     }
 
     fun setStartData(data: ByteArray){
         startData = data
     }
 
-    fun updateTime(timeData: ByteArray){
+    fun updateData(timeData: ByteArray){
         dateTime.timeInMillis = (getLongFromByteArray(timeData) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
-        time.text = dtf.format(dateTime.time)
+        time.text = tf.format(dateTime.time)
+        date.text = df.format(dateTime.time)
         clock.setTime(dateTime.get(Calendar.HOUR), dateTime.get(Calendar.MINUTE), dateTime.get(Calendar.SECOND))
 
     }

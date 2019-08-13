@@ -38,4 +38,5 @@
     <string name="about">About</string>
     <string name="authenticating">Authenticating</string>
     <string name="auto_auth_switch">Auto authorization</string>
+    <string name="manual_bells_control">Manual Bells Control</string>
 </resources>

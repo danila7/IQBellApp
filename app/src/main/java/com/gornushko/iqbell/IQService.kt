@@ -29,13 +29,14 @@ class IQService: Service() {
     private var pi: PendingIntent? = null
     private var btAdapter: BluetoothAdapter? = null
     private var connectThread: StartConnectionThread
-    private var ping: ConnectionThread? = null
+    private var connection: ConnectionThread
     private var socket: BluetoothSocket? = null
     private lateinit var oStream: OutputStream
     private lateinit var iStream: InputStream
 
     init {
         connectThread = StartConnectionThread()
+        connection = ConnectionThread()
     }
 
     companion object {
@@ -56,10 +57,12 @@ class IQService: Service() {
         const val NOT_PAIRED = 4
         const val STOP_SERVICE = 404
         const val NEW_PENDING_INTENT = 301
-        const val DATA_TRANSFER = 22
+        const val SEND_DATA = 22
         const val DEVICE_STATE = 23
         const val DATA = "dt"
-        const val AUTO_AUTH = "aa"
+        const val EXTRA_DATA = "edt"
+        const val GET_EXTRA_DATA = 8
+        const val NEW_EXTRA = 9
     }
 
     override fun onCreate() {
@@ -112,9 +115,10 @@ class IQService: Service() {
                 stopForeground(true)
                 stopSelf()
             }
-            DATA_TRANSFER -> {
+            SEND_DATA -> {
                 //sendData(intent.getIntExtra(TASK, 0), intent.getByteArrayExtra(DATA)!!)
             }
+            GET_EXTRA_DATA -> connection.getExtraDataFlag = true
         }
         return START_NOT_STICKY
     }
@@ -166,31 +170,24 @@ class IQService: Service() {
         if (isPaired) {
             pi?.send(CONNECTION)
             updateNotification(getString(R.string.connecting), true)
-            start()
+            connection.start()
         } else {
             pi?.send(NOT_PAIRED)
             updateNotification(getString(R.string.preparing), true)
         }
     }
 
-    private fun start() {
-        ping = ConnectionThread()
-        ping!!.start()
-    }
-
     fun stop() {
         doAsync {
-            ping?.flag = false
-            ping?.interrupt()
-            ping?.join()
-            ping = null
-            connectThread.flag = false
+            connection.runningFlag = false
+            connection.interrupt()
+            connection.join()
+            connectThread.runningFlag = false
             connectThread.interrupt()
             connectThread.join()
-            ping?.flag = false
-            ping?.interrupt()
-            ping?.join()
-            ping = null
+            connection.runningFlag = false
+            connection.interrupt()
+            connection.join()
             try {
                 socket?.close()
             } catch (e: IOException) {}
@@ -199,13 +196,11 @@ class IQService: Service() {
     }
 
     private inner class StartConnectionThread : Thread() {
-
-        var flag = true
-
+        var runningFlag = true
         override fun run() {
             // Cancel discovery because it otherwise slows down the connection.
             btAdapter?.cancelDiscovery()
-            while (flag) {
+            while (runningFlag) {
                 var mmSocket: BluetoothSocket
                 try {
                     mmSocket = btAdapter?.getRemoteDevice(address)?.createRfcommSocketToServiceRecord(MY_UUID) ?: continue
@@ -219,13 +214,20 @@ class IQService: Service() {
                     socket = mmSocket
                     iStream = mmSocket.inputStream
                     oStream = mmSocket.outputStream
-                    var tempData: ByteArray?
-                    while (true){
+                    var tempExtraData: ByteArray? = null
+                    var tempData: ByteArray? = null
+                    for(i in 0..10){
+                        tempExtraData = getData(true)
+                        if(tempExtraData != null) break
+                    }
+                    for(i in 0..5){
                         tempData = getData()
                         if(tempData != null) break
                     }
+                    if(tempData == null) tempData = ByteArray(5)
+                    if(tempExtraData == null) tempExtraData = ByteArray(80)
                     updateNotification(getString(R.string.connected), false)
-                    pi?.send(applicationContext, CONNECTED, Intent().putExtra(DATA, tempData))
+                    pi?.send(applicationContext, CONNECTED, Intent().putExtra(DATA, tempData).putExtra(EXTRA_DATA, tempExtraData))
                     break
                 } else {
                     pi?.send(RECONNECTING)
@@ -246,9 +248,10 @@ class IQService: Service() {
 
     private inner class ConnectionThread : Thread() {
         var counter = 0
-        var flag = true
+        var runningFlag = true
+        var getExtraDataFlag = false
         override fun run() {
-            while (flag) {
+            while (runningFlag) {
                 if (!connectThread.isAlive) {
                     if (socket?.isConnected != true) {
                         connectThread = StartConnectionThread()
@@ -273,6 +276,15 @@ class IQService: Service() {
                             connectThread = StartConnectionThread()
                             connectThread.start()
                         }
+                        if(getExtraDataFlag){
+                            getExtraDataFlag = false
+                            var tempExtraData: ByteArray? = null
+                            for(i in 0..10){
+                                tempExtraData = getData(true)
+                                if(tempExtraData != null) break
+                            }
+                            pi?.send(applicationContext, NEW_EXTRA, Intent().putExtra(EXTRA_DATA, tempExtraData))
+                        }
                     }
                 }
                 try {
@@ -285,8 +297,8 @@ class IQService: Service() {
     private fun sendData(task: Int, data: ByteArray){ //an universal function for receiving/sending data
         doAsync {
             Log.d(TAG, "Started async task doTransfer()")
-            ping?.flag = false //interrupting ping thread
-            ping?.join()
+            connection?.runningFlag = false //interrupting connection thread
+            connection?.join()
             Log.d(TAG, "Joined")
             try{
                 val iStream = socket!!.inputStream
@@ -339,14 +351,16 @@ class IQService: Service() {
     }
 /*
     private fun restartPing(){
-        ping = null
-        ping = ConnectionThread()
-        ping!!.start()
+        connection = null
+        connection = ConnectionThread()
+        connection!!.start()
     }*/
 
     private fun connect(): Boolean {
-        oStream.write(PASSWORD)  //authorization
-        oStream.flush()
+        try{
+            oStream.write(PASSWORD)  //authorization
+            oStream.flush()
+        }catch (e: IOException){}
         try{
             Thread.sleep(100) //waiting for answer
         }catch (e: InterruptedException){}
@@ -358,9 +372,9 @@ class IQService: Service() {
         return code == 11
     }
 
-    private fun getData(): ByteArray? {
+    private fun getData(extra: Boolean = false): ByteArray? {
         if(!connect()) return null
-        val myData: ByteArray = byteArrayOf(0x0, 0x6e, 0x75, 0x6c, 0x6c)
+        val myData: ByteArray = byteArrayOf(if(extra) 0x5 else 0x0, 0x6e, 0x75, 0x6c, 0x6c)
         oStream.write(myData)
         val crc = CRC32()
         crc.reset()
@@ -372,10 +386,12 @@ class IQService: Service() {
             if (nByte == 11) {
                 crc.reset()
                 crc.update(nByte)
-                val tempData = ByteArray(4)
+                val tempData = ByteArray(if(extra) 80 else 5)
                 iStream.read(tempData)
                 crc.update(tempData)
-                if (getChecksum(iStream) == crc.value) return tempData
+                val gCh = getChecksum(iStream)
+                val sCh = crc.value
+                if (gCh ==sCh) return tempData
             }
         }
         return null

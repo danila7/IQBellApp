@@ -11,8 +11,6 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.*
-import java.text.DateFormat
-import java.util.*
 
 @ExperimentalUnsignedTypes
 class MainActivity : AppCompatActivity() {
@@ -43,7 +41,9 @@ class MainActivity : AppCompatActivity() {
         fm.beginTransaction().add(R.id.fragment_container, calendarFragment, "3").hide(calendarFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, timetableFragment, "2").hide(timetableFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
-        homeFragment.setStartData(intent.getByteArrayExtra(START_DATA)!!)
+        val startData = intent.getByteArrayExtra(START_DATA)!!
+        homeFragment.setStartData(startData.copyOfRange(0, 4))
+        batteryFragment.setStartData(startData[4])
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
@@ -89,12 +89,21 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         when(resultCode){
             IQService.DEVICE_STATE -> {
-                homeFragment.updateTime(data!!.getByteArrayExtra(IQService.DATA)!!)
-
+                val state = data!!.getByteArrayExtra(IQService.DATA)!!
+                homeFragment.updateData(state.copyOfRange(0, 4))
+                batteryFragment.updateData(state[4])
             }
             IQService.RECONNECTING, IQService.BT_OFF -> {
                 goingBack = true
                 startActivity(intentFor<ConnectActivity>(ConnectActivity.KEY to resultCode).newTask().clearTask().clearTop())
+            }
+            IQService.NEW_EXTRA -> {
+                val extra = data!!.getByteArrayExtra(IQService.EXTRA_DATA)
+                if(extra == null){
+                    toast("Error updating extra info")
+                } else{
+                    //do something
+                }
             }
         }
     }/*
@@ -102,7 +111,7 @@ class MainActivity : AppCompatActivity() {
 
 
     fun getInfo(view: View){
-        startService(intentFor<IQService>(IQService.ACTION to IQService.DATA_TRANSFER, IQService.TASK to 0, IQService.DATA to ByteArray(1)))
+        startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.TASK to 0, IQService.DATA to ByteArray(1)))
     }
 
     private fun getDeviceInfo(data: ByteArray){
@@ -138,7 +147,7 @@ class MainActivity : AppCompatActivity() {
     fun sendTime(view: View){
         val timeForArduino = newDateTime.timeInMillis / 1_000 + 10_800
         val data = ByteArray(1){0x4} + makeByteArrayFromLong(timeForArduino)
-        startService(intentFor<IQService>(IQService.ACTION to IQService.DATA_TRANSFER, IQService.TASK to 4, IQService.DATA to data))
+        startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.TASK to 4, IQService.DATA to data))
     }
 
     fun setSysTime(view: View){
