@@ -10,6 +10,7 @@
     <include
             android:id="@+id/toolbar"
             layout="@layout/toolbar"/>
+
     <FrameLayout
             android:layout_marginTop="?attr/actionBarSize"
             android:id="@+id/fragment_container"

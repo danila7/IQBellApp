@@ -50,6 +50,8 @@ class HomeFragment : Fragment() {
     fun updateTime(timeData: ByteArray){
         dateTime.timeInMillis = (getLongFromByteArray(timeData) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
         time.text = dtf.format(dateTime.time)
+        clock.setTime(dateTime.get(Calendar.HOUR), dateTime.get(Calendar.MINUTE), dateTime.get(Calendar.SECOND))
+
     }
 
     private fun getLongFromByteArray(data: ByteArray): Long{
