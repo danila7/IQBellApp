@@ -15,7 +15,6 @@ import java.util.*
 
 
 private val dateTime: Calendar = GregorianCalendar.getInstance()
-private val dtf = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.DEFAULT)
 private val df = DateFormat.getDateInstance(DateFormat.LONG)
 private val tf = DateFormat.getTimeInstance(DateFormat.DEFAULT)
 private lateinit var startData: ByteArray

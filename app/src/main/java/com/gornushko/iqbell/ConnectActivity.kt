@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import kotlinx.android.synthetic.main.activity_connect.*
 import org.jetbrains.anko.*
+import org.jetbrains.anko.sdk27.coroutines.onClick
 
 @ExperimentalUnsignedTypes
 class ConnectActivity : AppCompatActivity(){
@@ -27,7 +28,7 @@ class ConnectActivity : AppCompatActivity(){
         status.text = getText(R.string.bt_is_off)
         bt_on_button.visibility = View.VISIBLE
         progress.visibility = View.INVISIBLE
-        turnBtOn(bt_on_button)
+        turnBtOn()
     }
 
     private fun btOnNotPaired() {
@@ -64,6 +65,7 @@ class ConnectActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_connect)
+        bt_on_button.onClick { turnBtOn() }
         setSupportActionBar(toolbar as Toolbar?)
         when(intent.extras?.getInt(KEY)){
             IQService.RECONNECTING ->{
@@ -117,6 +119,6 @@ class ConnectActivity : AppCompatActivity(){
     }
 
 
-    fun turnBtOn(view: View) = startActivity(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+    private fun turnBtOn() = startActivity(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
 
 }

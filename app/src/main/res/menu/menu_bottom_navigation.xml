@@ -29,9 +29,9 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_time"
         android:enabled="true"
-        android:icon="@drawable/ic_settings_outline"
-        android:title="@string/settings"
+        android:icon="@drawable/ic_access_time_black_24dp"
+        android:title="@string/time"
         app:showAsAction="ifRoom" />
 </menu>

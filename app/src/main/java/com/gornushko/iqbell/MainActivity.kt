@@ -3,7 +3,6 @@ package com.gornushko.iqbell
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.widget.Toolbar
@@ -27,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     private val timetableFragment = TimetableFragment()
     private val calendarFragment = CalendarFragment()
     private val batteryFragment = BatteryFragment()
-    private val settingsFragment = SettingsFragment()
+    private val timeFragment = TimeFragment()
     private var active: Fragment = homeFragment
     private val fm = supportFragmentManager
 
@@ -36,25 +35,35 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar as Toolbar?)
         bottomNavigation.setOnNavigationItemSelectedListener(navListener)
-        fm.beginTransaction().add(R.id.fragment_container, settingsFragment, "5").hide(settingsFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, timeFragment, "5").hide(timeFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, batteryFragment, "4").hide(batteryFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, calendarFragment, "3").hide(calendarFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, timetableFragment, "2").hide(timetableFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
         val startData = intent.getByteArrayExtra(START_DATA)!!
         homeFragment.setStartData(startData.copyOfRange(0, 4))
+        timeFragment.setStartData(startData.copyOfRange(0, 4))
         batteryFragment.setStartData(startData[4])
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.menu_toolbar, menu)
+        when(active){
+            is HomeFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
+            is TimetableFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
+            is CalendarFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
+            is BatteryFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
+            is TimeFragment -> menuInflater.inflate(R.menu.nenu_toolbar_send, menu)
+        }
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.action_about -> startActivity(intentFor<AboutActivity>())
+            R.id.action_send -> when(active){
+                is TimeFragment -> timeFragment.send()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -65,9 +74,9 @@ class MainActivity : AppCompatActivity() {
                 fm.beginTransaction().hide(active).show(homeFragment).commit()
                 active = homeFragment
             }
-            R.id.action_settings -> {
-                fm.beginTransaction().hide(active).show(settingsFragment).commit()
-                active = settingsFragment
+            R.id.action_time -> {
+                fm.beginTransaction().hide(active).show(timeFragment).commit()
+                active = timeFragment
             }
             R.id.action_battery -> {
                 fm.beginTransaction().hide(active).show(batteryFragment).commit()
@@ -82,6 +91,8 @@ class MainActivity : AppCompatActivity() {
                 active = timetableFragment
             }
         }
+
+        invalidateOptionsMenu()
         return@OnNavigationItemSelectedListener true
     }
 
@@ -91,6 +102,7 @@ class MainActivity : AppCompatActivity() {
             IQService.DEVICE_STATE -> {
                 val state = data!!.getByteArrayExtra(IQService.DATA)!!
                 homeFragment.updateData(state.copyOfRange(0, 4))
+                timeFragment.updateData(state.copyOfRange(0, 4))
                 batteryFragment.updateData(state[4])
             }
             IQService.RECONNECTING, IQService.BT_OFF -> {
@@ -105,65 +117,11 @@ class MainActivity : AppCompatActivity() {
                     //do something
                 }
             }
+            IQService.BUSY -> toast(getString(R.string.busy))
+            IQService.ERROR -> toast(R.string.error_sendind)
+            IQService.OK -> toast(R.string.data_was_sent)
         }
-    }/*
-
-
-
-    fun getInfo(view: View){
-        startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.TASK to 0, IQService.DATA to ByteArray(1)))
     }
-
-    private fun getDeviceInfo(data: ByteArray){
-        currentDateTime.timeInMillis = (getLongFromByteArray(data) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
-        current_time.text = tf.format(currentDateTime.time)
-        current_date.text = df.format(currentDateTime.time)
-
-    }
-
-    fun timePicker(view: View){
-        val dialog = TimePickerDialog(this, android.R.style.ThemeOverlay_Material_Dialog,
-            TimePickerDialog.OnTimeSetListener{_, mHour, mMinute -> run{
-                newDateTime.set(Calendar.HOUR_OF_DAY, mHour)
-                newDateTime.set(Calendar.MINUTE, mMinute)
-                newDateTime.set(Calendar.SECOND, 0)
-                new_time.text = tf.format(newDateTime.time)
-            }}, currentDateTime.get(Calendar.HOUR_OF_DAY), currentDateTime.get(Calendar.MINUTE), true)
-        dialog.show()
-    }
-
-    fun datePicker(view: View){
-        val dialog = DatePickerDialog(this, android.R.style.ThemeOverlay_Material_Dialog,
-            DatePickerDialog.OnDateSetListener{_, mYear, mMonth, mDay -> run{
-                newDateTime.set(Calendar.YEAR, mYear)
-                newDateTime.set(Calendar.MONTH, mMonth)
-                newDateTime.set(Calendar.DAY_OF_MONTH, mDay)
-                new_date.text = df.format(newDateTime.time)
-            }}, currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH),
-            currentDateTime.get(Calendar.DAY_OF_MONTH))
-        dialog.show()
-    }
-
-    fun sendTime(view: View){
-        val timeForArduino = newDateTime.timeInMillis / 1_000 + 10_800
-        val data = ByteArray(1){0x4} + makeByteArrayFromLong(timeForArduino)
-        startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.TASK to 4, IQService.DATA to data))
-    }
-
-    fun setSysTime(view: View){
-        newDateTime.timeInMillis = System.currentTimeMillis()
-        new_date.text = df.format(newDateTime.time)
-        new_time.text = tf.format(Date())
-    }
-
-
-
-    private fun makeByteArrayFromLong(sum: Long): ByteArray{
-        val result = ByteArray(4)
-        val tempSum = sum.toUInt()
-        for(i in 0..3) result[i] = (tempSum shr 8*i).toUByte().toByte()
-        return result
-    }*/
 
     override fun onDestroy() {
         super.onDestroy()

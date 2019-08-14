@@ -63,6 +63,9 @@ class IQService: Service() {
         const val EXTRA_DATA = "edt"
         const val GET_EXTRA_DATA = 8
         const val NEW_EXTRA = 9
+        const val BUSY = 13
+        const val OK = 14
+        const val ERROR = 15
     }
 
     override fun onCreate() {
@@ -116,7 +119,11 @@ class IQService: Service() {
                 stopSelf()
             }
             SEND_DATA -> {
-                //sendData(intent.getIntExtra(TASK, 0), intent.getByteArrayExtra(DATA)!!)
+                if(connection.sendDataFlag) pi?.send(BUSY)
+                else{
+                    connection.sendDataFlag = true
+                    connection.dataToSend = intent.getByteArrayExtra(DATA)!!
+                }
             }
             GET_EXTRA_DATA -> connection.getExtraDataFlag = true
         }
@@ -250,6 +257,8 @@ class IQService: Service() {
         var counter = 0
         var runningFlag = true
         var getExtraDataFlag = false
+        var sendDataFlag = false
+        var dataToSend = ByteArray(1)
         override fun run() {
             while (runningFlag) {
                 if (!connectThread.isAlive) {
@@ -276,6 +285,11 @@ class IQService: Service() {
                             connectThread = StartConnectionThread()
                             connectThread.start()
                         }
+                        if(sendDataFlag){
+                            if(sendData(dataToSend)) pi?.send(OK)
+                            else pi?.send(ERROR)
+                            sendDataFlag = false
+                        }
                         if(getExtraDataFlag){
                             getExtraDataFlag = false
                             var tempExtraData: ByteArray? = null
@@ -293,47 +307,28 @@ class IQService: Service() {
             }
         }
     }
-/*
-    private fun sendData(task: Int, data: ByteArray){ //an universal function for receiving/sending data
-        doAsync {
-            Log.d(TAG, "Started async task doTransfer()")
-            connection?.runningFlag = false //interrupting connection thread
-            connection?.join()
-            Log.d(TAG, "Joined")
-            try{
-                val iStream = socket!!.inputStream
-                val oStream = socket!!.outputStream
-                oStream?.write(PASSWORD)  //authorization
-                oStream?.flush()
-                Thread.sleep(100) //waiting for answer
-                var code = 0
-                if(iStream.available() > 0) {
-                    code = iStream.read() //reading the answer
-                    clearInput(iStream)
-                }
-                Log.d(TAG, "code is: $code")
-                if(code == 11){ //if authorization succeed
-                    oStream.write(data)
-                    val crc = CRC32()
-                    crc.reset()
-                    crc.update(data)
-                    sendChecksum(crc.value, oStream) //sending checksum
-                    Thread.sleep(150)
-                    Log.d(TAG, "Data available: ${iStream.available()}")
-                    if(iStream.available() > 0) {
-                        val nByte = iStream.read()
-                        Log.d(TAG, "nByte: $nByte")
-                        if (nByte == 11) Log.d(TAG, "Success")
-                        else Log.d(TAG, "The data was corrupted during sending to Arduino")
-                    }
-                }
-            } catch (e: Exception){}
-            restartPing()
-        }
-    }*/
 
-    private fun clearInput(str: InputStream) {
-        while (str.available() > 0) str.read()
+    private fun sendData(data: ByteArray): Boolean{ //an universal function for receiving/sending data
+        try{
+            if(connect()){ //if authorization succeed
+                oStream.write(data)
+                val crc = CRC32()
+                crc.reset()
+                crc.update(data)
+                sendChecksum(crc.value, oStream) //sending checksum
+                Thread.sleep(150)
+                if(iStream.available() > 0) {
+                    val nByte = iStream.read()
+                    clearInput()
+                    if (nByte == 11) return true
+                }
+            }
+        } catch (e: Exception){}
+        return false
+    }
+
+    private fun clearInput() {
+        while (iStream.available() > 0) iStream.read()
     }
 
     private fun sendChecksum(sum: Long, stream: OutputStream) {
@@ -349,12 +344,6 @@ class IQService: Service() {
         for (i in 3 downTo 0) result = (result shl 8) + tempData[i].toUByte()
         return result.toLong()
     }
-/*
-    private fun restartPing(){
-        connection = null
-        connection = ConnectionThread()
-        connection!!.start()
-    }*/
 
     private fun connect(): Boolean {
         try{
@@ -367,7 +356,7 @@ class IQService: Service() {
         var code = 0
         if (iStream.available() > 0) {
             code = iStream.read() //reading the answer
-            clearInput(iStream)
+            clearInput()
         }
         return code == 11
     }

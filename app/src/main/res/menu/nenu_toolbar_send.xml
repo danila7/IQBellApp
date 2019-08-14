@@ -7,4 +7,10 @@
             android:orderInCategory="1"
             app:showAsAction="ifRoom"/>
 
+    <item
+            android:icon="@drawable/ic_send_white_24dp"
+            android:id="@+id/action_send"
+            android:title="@string/send"
+            android:orderInCategory="2"
+            app:showAsAction="ifRoom"/>
 </menu>
