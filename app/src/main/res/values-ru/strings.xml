@@ -41,4 +41,6 @@
     <string name="busy">IQServise занят</string>
     <string name="data_was_sent">Данные успешно отправлены</string>
     <string name="error_sendind">Ошибка передачи данных</string>
+    <string name="main_tab">Основное</string>
+    <string name="second_tab">Дополнительное</string>
 </resources>

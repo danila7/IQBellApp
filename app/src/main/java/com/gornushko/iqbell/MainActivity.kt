@@ -16,8 +16,9 @@ class MainActivity : AppCompatActivity() {
 
     companion object Const{
         private const val TAG = "Bluetooth Action"
-        const val SH_PREFS = "shPrefs"
         const val START_DATA = "start_d"
+        const val START_EXTRA_DATA = "start_x"
+
     }
 
     private var goingBack = false
@@ -41,9 +42,11 @@ class MainActivity : AppCompatActivity() {
         fm.beginTransaction().add(R.id.fragment_container, timetableFragment, "2").hide(timetableFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
         val startData = intent.getByteArrayExtra(START_DATA)!!
+        val startExtraData  = intent.getByteArrayExtra(START_EXTRA_DATA)!!
         homeFragment.setStartData(startData.copyOfRange(0, 4))
         timeFragment.setStartData(startData.copyOfRange(0, 4))
         batteryFragment.setStartData(startData[4])
+        timetableFragment.setStartData(startExtraData.copyOfRange(0, 32))
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
@@ -114,7 +117,7 @@ class MainActivity : AppCompatActivity() {
                 if(extra == null){
                     toast("Error updating extra info")
                 } else{
-                    //do something
+                    timetableFragment.updateData(extra)
                 }
             }
             IQService.BUSY -> toast(getString(R.string.busy))

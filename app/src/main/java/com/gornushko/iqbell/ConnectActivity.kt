@@ -38,9 +38,10 @@ class ConnectActivity : AppCompatActivity(){
         progress.visibility = View.INVISIBLE
     }
 
-    private fun connected(data: ByteArray) {
+    private fun connected(data: ByteArray, extraData: ByteArray) {
         connected = true
-        startActivity(intentFor<MainActivity>(MainActivity.START_DATA to data).newTask().clearTask().clearTop())
+        startActivity(intentFor<MainActivity>(MainActivity.START_DATA to data,
+            MainActivity.START_EXTRA_DATA to extraData).newTask().clearTask().clearTop())
     }
 
     private fun reconnecting() {
@@ -69,14 +70,17 @@ class ConnectActivity : AppCompatActivity(){
         setSupportActionBar(toolbar as Toolbar?)
         when(intent.extras?.getInt(KEY)){
             IQService.RECONNECTING ->{
-                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
+                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT,
+                    IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
                 reconnecting()
             }
             IQService.BT_OFF -> {
-                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
+                startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT,
+                    IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
                 btOff()
             }
-            else -> startService(intentFor<IQService>(IQService.ACTION to IQService.START, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
+            else -> startService(intentFor<IQService>(IQService.ACTION to IQService.START,
+                IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
         }
     }
 
@@ -100,7 +104,8 @@ class ConnectActivity : AppCompatActivity(){
     override fun onDestroy() {
         super.onDestroy()
         if(!connected) {
-            startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION, IQService.STOP_SERVICE))
+            startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION,
+                IQService.STOP_SERVICE))
         }
         Log.d(TAG, "MAIN ACTIVITY DESTROYED")
     }
@@ -114,7 +119,8 @@ class ConnectActivity : AppCompatActivity(){
             IQService.BT_OFF -> btOff()
             IQService.BT_NOT_SUPPORTED -> btNotSupported()
             IQService.RECONNECTING -> reconnecting()
-            IQService.CONNECTED -> connected(data!!.getByteArrayExtra(IQService.DATA)!!)
+            IQService.CONNECTED -> connected(data!!.getByteArrayExtra(IQService.DATA)!!,
+                data.getByteArrayExtra(IQService.EXTRA_DATA)!!)
         }
     }
 

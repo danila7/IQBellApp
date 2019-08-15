@@ -41,4 +41,6 @@
     <string name="data_was_sent">Data was sent successfully</string>
     <string name="error_sendind">Error sending data</string>
     <string name="busy">IQService is busy</string>
+    <string name="main_tab">Main</string>
+    <string name="second_tab">Second</string>
 </resources>
