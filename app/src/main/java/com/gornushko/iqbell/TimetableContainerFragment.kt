@@ -9,8 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
-import kotlinx.android.synthetic.main.fragment_timetable.view.*
-import org.jetbrains.anko.support.v4.toast
+import kotlinx.android.synthetic.main.fragment_timetable_container.view.*
 
 class TimetableContainerFragment : Fragment() {
 
@@ -25,7 +24,7 @@ class TimetableContainerFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_timetable, container, false)
+        val view = inflater.inflate(R.layout.fragment_timetable_container, container, false)
         view.pager.adapter = Adapter()
         view.pager.addOnPageChangeListener(object : ViewPager.SimpleOnPageChangeListener() {
             override fun onPageSelected(position: Int) {
