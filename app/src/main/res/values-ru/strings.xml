@@ -38,9 +38,14 @@
     <string name="set_android_td">Установить дату и время Android</string>
     <string name="time">Время</string>
     <string name="send">Отправить</string>
-    <string name="busy">IQServise занят</string>
     <string name="data_was_sent">Данные успешно отправлены</string>
-    <string name="error_sendind">Ошибка передачи данных</string>
     <string name="main_tab">Основное</string>
     <string name="second_tab">Дополнительное</string>
+    <string name="sending_data">Данные отправляются</string>
+    <string name="cancel">Отмена</string>
+    <string name="error">Ошибка</string>
+    <string name="repeat">Повторить</string>
+    <string name="error_sendind">Не удалось передать данные</string>
+    <string name="clear">Очистить</string>
+    <string name="edit">Редактировать</string>
 </resources>

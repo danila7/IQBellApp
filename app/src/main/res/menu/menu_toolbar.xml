@@ -5,6 +5,6 @@
             android:icon="@drawable/ic_info_outline_white_24dp"
             android:title="@string/about"
             android:orderInCategory="1"
-            app:showAsAction="ifRoom"/>
+            app:showAsAction="always"/>
 
 </menu>

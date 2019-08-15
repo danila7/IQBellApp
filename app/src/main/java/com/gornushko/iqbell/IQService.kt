@@ -119,11 +119,8 @@ class IQService: Service() {
                 stopSelf()
             }
             SEND_DATA -> {
-                if(connection.sendDataFlag) pi?.send(BUSY)
-                else{
-                    connection.sendDataFlag = true
-                    connection.dataToSend = intent.getByteArrayExtra(DATA)!!
-                }
+                connection.sendDataFlag = true
+                connection.dataToSend = intent.getByteArrayExtra(DATA)!!
             }
             GET_EXTRA_DATA -> connection.getExtraDataFlag = true
         }
@@ -231,8 +228,8 @@ class IQService: Service() {
                         tempData = getData()
                         if(tempData != null) break
                     }
-                    if(tempData == null) tempData = ByteArray(5)
-                    if(tempExtraData == null) tempExtraData = ByteArray(80)
+                    if(tempData == null) continue
+                    if(tempExtraData == null) continue
                     updateNotification(getString(R.string.connected), false)
                     pi?.send(applicationContext, CONNECTED, Intent().putExtra(DATA, tempData).putExtra(EXTRA_DATA, tempExtraData))
                     break

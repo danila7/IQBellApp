@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -12,7 +13,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.*
 
 @ExperimentalUnsignedTypes
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MyFragmentListener {
 
     companion object Const{
         private const val TAG = "Bluetooth Action"
@@ -22,14 +23,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var goingBack = false
-
+    lateinit var dialog: AlertDialog
+    lateinit var lastData: ByteArray
     private val homeFragment = HomeFragment()
-    private val timetableFragment = TimetableFragment()
+    private val timetableComtainerFragment = TimetableContainerFragment()
     private val calendarFragment = CalendarFragment()
     private val batteryFragment = BatteryFragment()
     private val timeFragment = TimeFragment()
     private var active: Fragment = homeFragment
     private val fm = supportFragmentManager
+    private var edit = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,24 +42,24 @@ class MainActivity : AppCompatActivity() {
         fm.beginTransaction().add(R.id.fragment_container, timeFragment, "5").hide(timeFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, batteryFragment, "4").hide(batteryFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, calendarFragment, "3").hide(calendarFragment).commit()
-        fm.beginTransaction().add(R.id.fragment_container, timetableFragment, "2").hide(timetableFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, timetableComtainerFragment, "2").hide(timetableComtainerFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
         val startData = intent.getByteArrayExtra(START_DATA)!!
         val startExtraData  = intent.getByteArrayExtra(START_EXTRA_DATA)!!
         homeFragment.setStartData(startData.copyOfRange(0, 4))
         timeFragment.setStartData(startData.copyOfRange(0, 4))
         batteryFragment.setStartData(startData[4])
-        timetableFragment.setStartData(startExtraData.copyOfRange(0, 32))
+        timetableComtainerFragment.setStartData(startExtraData.copyOfRange(0, 32))
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         when(active){
             is HomeFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
-            is TimetableFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
+            is TimetableContainerFragment -> menuInflater.inflate(if(edit)R.menu.menu_toolbar_send_edit else R.menu.menu_toolbar_send, menu)
             is CalendarFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
             is BatteryFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
-            is TimeFragment -> menuInflater.inflate(R.menu.nenu_toolbar_send, menu)
+            is TimeFragment -> menuInflater.inflate(R.menu.menu_toolbar_send, menu)
         }
         return super.onCreateOptionsMenu(menu)
     }
@@ -67,6 +70,8 @@ class MainActivity : AppCompatActivity() {
             R.id.action_send -> when(active){
                 is TimeFragment -> timeFragment.send()
             }
+            R.id.action_edit -> timetableComtainerFragment.edit()
+            R.id.action_clear -> timetableComtainerFragment.clear()
         }
         return super.onOptionsItemSelected(item)
     }
@@ -90,8 +95,8 @@ class MainActivity : AppCompatActivity() {
                 active = calendarFragment
             }
             R.id.action_timetable -> {
-                fm.beginTransaction().hide(active).show(timetableFragment).commit()
-                active = timetableFragment
+                fm.beginTransaction().hide(active).show(timetableComtainerFragment).commit()
+                active = timetableComtainerFragment
             }
         }
 
@@ -117,17 +122,49 @@ class MainActivity : AppCompatActivity() {
                 if(extra == null){
                     toast("Error updating extra info")
                 } else{
-                    timetableFragment.updateData(extra)
+                    timetableComtainerFragment.updateData(extra)
                 }
             }
-            IQService.BUSY -> toast(getString(R.string.busy))
-            IQService.ERROR -> toast(R.string.error_sendind)
-            IQService.OK -> toast(R.string.data_was_sent)
+            IQService.ERROR -> {
+                dialog.dismiss()
+                alert (R.string.error_sendind){
+                    title = getString(R.string.error)
+                    positiveButton(getString(R.string.repeat)){sendData(lastData)}
+                    negativeButton(getString(R.string.cancel)){}
+                }.show()
+            }
+            IQService.OK -> {
+                alert(R.string.data_was_sent) {
+                    okButton {}
+                }.show()
+                dialog.dismiss()
+            }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if(!goingBack) startService(intentFor<IQService>(IQService.ACTION to IQService.STOP_SERVICE))
+    }
+
+    override fun sendData(data: ByteArray, updateExtra: Boolean){
+        startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.DATA to data))
+        lastData = data
+        val builder = AlertDialog.Builder(this)
+        builder.setCancelable(false)
+        builder.setView(R.layout.layout_loading_dialog)
+        dialog = builder.create()
+        dialog.show()
+    }
+
+
+    override fun noEdit() {
+        edit = false
+        invalidateOptionsMenu()
+    }
+
+    override fun edit() {
+        edit = true
+        invalidateOptionsMenu()
     }
 }

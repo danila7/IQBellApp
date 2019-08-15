@@ -3,6 +3,7 @@ package com.gornushko.iqbell
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -11,8 +12,6 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_time.*
 import kotlinx.android.synthetic.main.fragment_time.view.*
 import org.jetbrains.anko.sdk27.coroutines.onClick
-import org.jetbrains.anko.support.v4.intentFor
-import org.jetbrains.anko.support.v4.toast
 import java.text.DateFormat
 import java.util.*
 
@@ -25,6 +24,13 @@ private lateinit var startData: ByteArray
 
 @ExperimentalUnsignedTypes
 class TimeFragment : Fragment() {
+
+    lateinit var listener: MyFragmentListener
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        listener = context as MyFragmentListener
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_time, container, false)
@@ -95,6 +101,6 @@ class TimeFragment : Fragment() {
     fun send(){
         val timeForArduino = newDateTime.timeInMillis / 1_000 + 10_800
         val data = ByteArray(1){0x4} + makeByteArrayFromLong(timeForArduino)
-        activity!!.startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.DATA to data))
+        listener.sendData(data)
     }
 }
