@@ -52,4 +52,11 @@
     <string name="holidays">Каникулы</string>
     <string name="holidays_long_tab">Каникулы</string>
     <string name="holidays_short_tab">Выходные/Сокращённые дни</string>
+    <string name="short_day">Сокращённые уроки</string>
+    <string name="holiday_day">Выходной</string>
+    <string name="choose_short_or_holiday">Короткие уроки или выходной?</string>
+    <string name="from">C</string>
+    <string name="to">по</string>
+    <string name="set_start_date">Установите начало каникул</string>
+    <string name="set_end_date">Установите конец каникул</string>
 </resources>

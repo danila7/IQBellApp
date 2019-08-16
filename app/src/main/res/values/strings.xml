@@ -52,4 +52,11 @@
     <string name="timetables_second_tab">Second</string>
     <string name="holidays_short_tab">Short holidays</string>
     <string name="holidays_long_tab">Long holidays</string>
+    <string name="short_day">Short classes</string>
+    <string name="holiday_day">Holiday</string>
+    <string name="choose_short_or_holiday">Short classes or holiday?</string>
+    <string name="from">From</string>
+    <string name="to">to</string>
+    <string name="set_start_date">Set start of the holidays</string>
+    <string name="set_end_date">Set end of the holidays</string>
 </resources>

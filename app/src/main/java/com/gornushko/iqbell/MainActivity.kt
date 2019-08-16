@@ -69,9 +69,16 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
             R.id.action_send -> when(active){
                 is TimeFragment -> timeFragment.send()
                 is TimetableContainerFragment -> timetableContainerFragment.send()
+                is HolidaysContainerFragment -> holidaysContainerFragment.send()
             }
-            R.id.action_edit -> timetableContainerFragment.edit()
-            R.id.action_clear -> timetableContainerFragment.clear()
+            R.id.action_edit -> when(active){
+                is TimetableContainerFragment -> timetableContainerFragment.edit()
+                is HolidaysContainerFragment -> holidaysContainerFragment.edit()
+            }
+            R.id.action_clear -> when(active){
+                is TimetableContainerFragment -> timetableContainerFragment.clear()
+                is HolidaysContainerFragment -> holidaysContainerFragment.clear()
+            }
         }
         return super.onOptionsItemSelected(item)
     }

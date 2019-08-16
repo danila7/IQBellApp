@@ -12,8 +12,8 @@ class TimetableFragment : MyListFragment() {
     override fun updateView(){
         for(i in 0..15){
             val t = byteData[i]
-            if(t.toUByte() > 127.toUByte()) stringData[i] = "${i+1}:"
-            else stringData[i] = "${i+1}:   ${print2digits(t/12+8)}:${print2digits(t%12*5)}"
+            if(t.toUByte() > 127.toUByte()) stringData[i] = "${i+1}."
+            else stringData[i] = "${i+1}.   ${print2digits(t/12+8)}:${print2digits(t%12*5)}"
         }
         adapter?.notifyDataSetChanged()
     }
@@ -27,14 +27,13 @@ class TimetableFragment : MyListFragment() {
 
     override fun edit(){
         val tt = (byteData[adapter?.selectedItem!!].toUByte() and 0x7F.toUByte()).toInt()
-        val dialog = TimePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
+        TimePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
             TimePickerDialog.OnTimeSetListener{ _, mHour, mMinute -> run{
                 val t = (((mHour-8)*12)+(mMinute/5)).toUByte()
                 if(t < 128.toUByte()) {
                     byteData[adapter?.selectedItem!!] = t.toByte()
                     updateView()
                 }
-            }}, tt/12+8, tt%12*5, true)
-        dialog.show()
+            }}, tt/12+8, tt%12*5, true).show()
     }
 }

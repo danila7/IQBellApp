@@ -23,13 +23,13 @@ class HolidaysContainerFragment : MyContainerFragment() {
     }
 
     override fun setStartData(data: ByteArray){
-        one.setStartData(data.copyOfRange(0, 32))
-        two.setStartData(data.copyOfRange(32, 48))
+        two.setStartData(data.copyOfRange(0, 32))
+        one.setStartData(data.copyOfRange(32, 48))
     }
 
     override fun updateData(data: ByteArray){
-        one.updateData(data.copyOfRange(0, 32))
-        two.updateData(data.copyOfRange(32, 48))
+        two.updateData(data.copyOfRange(0, 32))
+        one.updateData(data.copyOfRange(32, 48))
     }
 
 }

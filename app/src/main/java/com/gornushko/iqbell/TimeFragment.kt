@@ -69,26 +69,24 @@ class TimeFragment : Fragment() {
     }
 
     private fun pickTime(){
-        val dialog = TimePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
+        TimePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
             TimePickerDialog.OnTimeSetListener{ _, mHour, mMinute -> run{
                 newDateTime.set(Calendar.HOUR_OF_DAY, mHour)
                 newDateTime.set(Calendar.MINUTE, mMinute)
                 newDateTime.set(Calendar.SECOND, 0)
                 new_time.text = tf.format(newDateTime.time)
-            }}, currentDateTime.get(Calendar.HOUR_OF_DAY), currentDateTime.get(Calendar.MINUTE), true)
-        dialog.show()
+            }}, currentDateTime.get(Calendar.HOUR_OF_DAY), currentDateTime.get(Calendar.MINUTE), true).show()
     }
 
     private fun pickDate(){
-        val dialog = DatePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
+        DatePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
             DatePickerDialog.OnDateSetListener{_, mYear, mMonth, mDay -> run{
                 newDateTime.set(Calendar.YEAR, mYear)
                 newDateTime.set(Calendar.MONTH, mMonth)
                 newDateTime.set(Calendar.DAY_OF_MONTH, mDay)
                 new_date.text = df.format(newDateTime.time)
             }}, currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH),
-            currentDateTime.get(Calendar.DAY_OF_MONTH))
-        dialog.show()
+            currentDateTime.get(Calendar.DAY_OF_MONTH)).show()
     }
 
     private fun makeByteArrayFromLong(sum: Long): ByteArray{
