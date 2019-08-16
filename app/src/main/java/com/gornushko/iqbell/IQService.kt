@@ -63,7 +63,6 @@ class IQService: Service() {
         const val EXTRA_DATA = "edt"
         const val GET_EXTRA_DATA = 8
         const val NEW_EXTRA = 9
-        const val BUSY = 13
         const val OK = 14
         const val ERROR = 15
     }
@@ -313,73 +312,83 @@ class IQService: Service() {
                 crc.reset()
                 crc.update(data)
                 sendChecksum(crc.value, oStream) //sending checksum
-                Thread.sleep(150)
+                try{
+                    Thread.sleep(150)
+                } catch (e: InterruptedException){}
                 if(iStream.available() > 0) {
                     val nByte = iStream.read()
                     clearInput()
                     if (nByte == 11) return true
                 }
             }
-        } catch (e: Exception){}
+        } catch (e: IOException){}
         return false
     }
 
     private fun clearInput() {
-        while (iStream.available() > 0) iStream.read()
+        try{
+            while (iStream.available() > 0) iStream.read()
+        }catch (e: IOException){}
     }
 
     private fun sendChecksum(sum: Long, stream: OutputStream) {
         val tempSum = sum.toUInt()
-        for (i in 0..3) stream.write((tempSum shr 8 * i).toUByte().toInt())
-        stream.flush()
+        try{
+            for (i in 0..3) stream.write((tempSum shr 8 * i).toUByte().toInt())
+            stream.flush()
+        }catch (e: IOException){}
     }
 
     private fun getChecksum(stream: InputStream): Long {
         val tempData = ByteArray(4)
-        stream.read(tempData)
+        try {
+            stream.read(tempData)
+        } catch (e: IOException){}
         var result = 0u
         for (i in 3 downTo 0) result = (result shl 8) + tempData[i].toUByte()
         return result.toLong()
     }
 
     private fun connect(): Boolean {
+        var code = 0
         try{
             oStream.write(PASSWORD)  //authorization
             oStream.flush()
-        }catch (e: IOException){}
-        try{
-            Thread.sleep(100) //waiting for answer
-        }catch (e: InterruptedException){}
-        var code = 0
+            try{
+                Thread.sleep(100) //waiting for answer
+            }catch (e: InterruptedException){}
         if (iStream.available() > 0) {
             code = iStream.read() //reading the answer
             clearInput()
-        }
+            }
+        }catch (e: IOException){}
         return code == 11
     }
 
     private fun getData(extra: Boolean = false): ByteArray? {
         if(!connect()) return null
         val myData: ByteArray = byteArrayOf(if(extra) 0x5 else 0x0, 0x6e, 0x75, 0x6c, 0x6c)
-        oStream.write(myData)
-        val crc = CRC32()
-        crc.reset()
-        crc.update(myData)
-        sendChecksum(crc.value, oStream) //sending checksum
-        Thread.sleep(200)
-        if (iStream.available() > 0) {
-            val nByte = iStream.read()
-            if (nByte == 11) {
-                crc.reset()
-                crc.update(nByte)
-                val tempData = ByteArray(if(extra) 80 else 5)
-                iStream.read(tempData)
-                crc.update(tempData)
-                val gCh = getChecksum(iStream)
-                val sCh = crc.value
-                if (gCh ==sCh) return tempData
+        try{
+            oStream.write(myData)
+            val crc = CRC32()
+            crc.reset()
+            crc.update(myData)
+            sendChecksum(crc.value, oStream) //sending checksum
+            Thread.sleep(200)
+            if (iStream.available() > 0) {
+                val nByte = iStream.read()
+                if (nByte == 11) {
+                    crc.reset()
+                    crc.update(nByte)
+                    val tempData = ByteArray(if(extra) 80 else 5)
+                    iStream.read(tempData)
+                    crc.update(tempData)
+                    val gCh = getChecksum(iStream)
+                    val sCh = crc.value
+                    if (gCh ==sCh) return tempData
+                }
             }
-        }
+        } catch (e: IOException){}
         return null
     }
 }

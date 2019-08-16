@@ -40,7 +40,6 @@
     <string name="send">Отправить</string>
     <string name="data_was_sent">Данные успешно отправлены</string>
     <string name="main_tab">Основное</string>
-    <string name="second_tab">Дополнительное</string>
     <string name="sending_data">Данные отправляются</string>
     <string name="cancel">Отмена</string>
     <string name="error">Ошибка</string>
@@ -48,4 +47,7 @@
     <string name="error_sendind">Не удалось передать данные</string>
     <string name="clear">Очистить</string>
     <string name="edit">Редактировать</string>
+    <string name="error_updating_extra">Ошибка получения данных</string>
+    <string name="data_updated">Данные успешно обновлены</string>
+    <string name="second_tab">Сокращённое</string>
 </resources>

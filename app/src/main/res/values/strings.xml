@@ -41,11 +41,13 @@
     <string name="data_was_sent">Data was sent successfully</string>
     <string name="error_sendind">Sending data wasn\'t successful</string>
     <string name="main_tab">Main</string>
-    <string name="second_tab">Second</string>
     <string name="sending_data">Sending data</string>
     <string name="error">Error</string>
     <string name="repeat">Repeat</string>
     <string name="cancel">Cancel</string>
     <string name="edit">Edit</string>
     <string name="clear">Clear</string>
+    <string name="error_updating_extra">Error updating data</string>
+    <string name="data_updated">The data was successfully updated</string>
+    <string name="second_tab">Second</string>
 </resources>

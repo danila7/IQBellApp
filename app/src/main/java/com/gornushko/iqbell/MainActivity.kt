@@ -16,17 +16,15 @@ import org.jetbrains.anko.*
 class MainActivity : AppCompatActivity(), MyFragmentListener {
 
     companion object Const{
-        private const val TAG = "Bluetooth Action"
         const val START_DATA = "start_d"
         const val START_EXTRA_DATA = "start_x"
-
     }
 
     private var goingBack = false
-    lateinit var dialog: AlertDialog
-    lateinit var lastData: ByteArray
+    private lateinit var dialog: AlertDialog
+    private lateinit var lastData: ByteArray
     private val homeFragment = HomeFragment()
-    private val timetableComtainerFragment = TimetableContainerFragment()
+    private val timetableContainerFragment = TimetableContainerFragment()
     private val calendarFragment = CalendarFragment()
     private val batteryFragment = BatteryFragment()
     private val timeFragment = TimeFragment()
@@ -42,14 +40,14 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
         fm.beginTransaction().add(R.id.fragment_container, timeFragment, "5").hide(timeFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, batteryFragment, "4").hide(batteryFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, calendarFragment, "3").hide(calendarFragment).commit()
-        fm.beginTransaction().add(R.id.fragment_container, timetableComtainerFragment, "2").hide(timetableComtainerFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, timetableContainerFragment, "2").hide(timetableContainerFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
         val startData = intent.getByteArrayExtra(START_DATA)!!
         val startExtraData  = intent.getByteArrayExtra(START_EXTRA_DATA)!!
         homeFragment.setStartData(startData.copyOfRange(0, 4))
         timeFragment.setStartData(startData.copyOfRange(0, 4))
         batteryFragment.setStartData(startData[4])
-        timetableComtainerFragment.setStartData(startExtraData.copyOfRange(0, 32))
+        timetableContainerFragment.setStartData(startExtraData.copyOfRange(0, 32))
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
@@ -69,9 +67,10 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
             R.id.action_about -> startActivity(intentFor<AboutActivity>())
             R.id.action_send -> when(active){
                 is TimeFragment -> timeFragment.send()
+                is TimetableContainerFragment -> timetableContainerFragment.send()
             }
-            R.id.action_edit -> timetableComtainerFragment.edit()
-            R.id.action_clear -> timetableComtainerFragment.clear()
+            R.id.action_edit -> timetableContainerFragment.edit()
+            R.id.action_clear -> timetableContainerFragment.clear()
         }
         return super.onOptionsItemSelected(item)
     }
@@ -95,8 +94,8 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
                 active = calendarFragment
             }
             R.id.action_timetable -> {
-                fm.beginTransaction().hide(active).show(timetableComtainerFragment).commit()
-                active = timetableComtainerFragment
+                fm.beginTransaction().hide(active).show(timetableContainerFragment).commit()
+                active = timetableContainerFragment
             }
         }
 
@@ -120,9 +119,16 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
             IQService.NEW_EXTRA -> {
                 val extra = data!!.getByteArrayExtra(IQService.EXTRA_DATA)
                 if(extra == null){
-                    toast("Error updating extra info")
+                    alert(R.string.error_updating_extra) {
+                        title = getString(R.string.error)
+                        positiveButton(getString(R.string.repeat)){startService(intentFor<IQService>(IQService.ACTION to IQService.GET_EXTRA_DATA))}
+                        negativeButton(getString(R.string.cancel)){}
+                    }.show()
                 } else{
-                    timetableComtainerFragment.updateData(extra)
+                    timetableContainerFragment.updateData(extra)
+                    alert(R.string.data_updated) {
+                        okButton {}
+                    }.show()
                 }
             }
             IQService.ERROR -> {
@@ -134,10 +140,10 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
                 }.show()
             }
             IQService.OK -> {
+                dialog.dismiss()
                 alert(R.string.data_was_sent) {
                     okButton {}
                 }.show()
-                dialog.dismiss()
             }
         }
     }
@@ -149,6 +155,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
 
     override fun sendData(data: ByteArray, updateExtra: Boolean){
         startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.DATA to data))
+        if(updateExtra) startService(intentFor<IQService>(IQService.ACTION to IQService.GET_EXTRA_DATA))
         lastData = data
         val builder = AlertDialog.Builder(this)
         builder.setCancelable(false)

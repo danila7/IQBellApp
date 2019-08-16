@@ -25,7 +25,7 @@ private lateinit var startData: ByteArray
 @ExperimentalUnsignedTypes
 class TimeFragment : Fragment() {
 
-    lateinit var listener: MyFragmentListener
+    private lateinit var listener: MyFragmentListener
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -100,7 +100,7 @@ class TimeFragment : Fragment() {
 
     fun send(){
         val timeForArduino = newDateTime.timeInMillis / 1_000 + 10_800
-        val data = ByteArray(1){0x4} + makeByteArrayFromLong(timeForArduino)
-        listener.sendData(data)
+        val dataToSend = ByteArray(1){0x4} + makeByteArrayFromLong(timeForArduino)
+        listener.sendData(dataToSend)
     }
 }

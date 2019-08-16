@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import kotlinx.android.synthetic.main.fragment_timetable_container.view.*
 
+@ExperimentalUnsignedTypes
 class TimetableContainerFragment : Fragment() {
 
     private val main = TimetableFragment()
@@ -56,6 +57,12 @@ class TimetableContainerFragment : Fragment() {
     fun edit(){
         if(activeTimetable == 0) main.edit()
         else second.edit()
+    }
+
+    fun send(){
+        val dataToSend = if(activeTimetable == 0) ByteArray(1){0x1} + main.send()
+        else ByteArray(1){0x6} + second.send()
+        listener.sendData(dataToSend, true)
     }
 
     inner class Adapter : FragmentPagerAdapter(childFragmentManager){
