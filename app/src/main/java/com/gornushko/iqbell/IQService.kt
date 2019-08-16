@@ -61,7 +61,7 @@ class IQService: Service() {
         const val DEVICE_STATE = 23
         const val DATA = "dt"
         const val EXTRA_DATA = "edt"
-        const val GET_EXTRA_DATA = 8
+        const val GET_EXTRA_DATA = "extra"
         const val NEW_EXTRA = 9
         const val OK = 14
         const val ERROR = 15
@@ -120,8 +120,8 @@ class IQService: Service() {
             SEND_DATA -> {
                 connection.sendDataFlag = true
                 connection.dataToSend = intent.getByteArrayExtra(DATA)!!
+                connection.getExtraDataFlag = intent.getBooleanExtra(GET_EXTRA_DATA, false)
             }
-            GET_EXTRA_DATA -> connection.getExtraDataFlag = true
         }
         return START_NOT_STICKY
     }
@@ -283,7 +283,10 @@ class IQService: Service() {
                         }
                         if(sendDataFlag){
                             if(sendData(dataToSend)) pi?.send(OK)
-                            else pi?.send(ERROR)
+                            else{
+                                pi?.send(ERROR)
+                                getExtraDataFlag = false
+                            }
                             sendDataFlag = false
                         }
                         if(getExtraDataFlag){
@@ -318,7 +321,9 @@ class IQService: Service() {
                 if(iStream.available() > 0) {
                     val nByte = iStream.read()
                     clearInput()
-                    if (nByte == 11) return true
+                    if (nByte == 11){
+                        return true
+                    }
                 }
             }
         } catch (e: IOException){}

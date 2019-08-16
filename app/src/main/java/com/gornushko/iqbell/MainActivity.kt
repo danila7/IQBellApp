@@ -166,8 +166,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
     }
 
     override fun sendData(data: ByteArray, updateExtra: Boolean){
-        startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.DATA to data))
-        if(updateExtra) startService(intentFor<IQService>(IQService.ACTION to IQService.GET_EXTRA_DATA))
+        startService(intentFor<IQService>(IQService.ACTION to IQService.SEND_DATA, IQService.DATA to data, IQService.GET_EXTRA_DATA to updateExtra))
         lastData = data
         val builder = AlertDialog.Builder(this)
         builder.setCancelable(false)

@@ -6,7 +6,7 @@
     <string name="error_bt_enabling">An error occurred while turning Bluetooth on</string>
     <string name="not_paired">IQBell is unpaired. Pair, then try again</string>
     <string name="connected">IQBell is connected</string>
-    <string name="disconnected">IQBell is disconnected. Press the button on the case and hold it for 5 seconds</string>
+    <string name="disconnected">IQBell is disconnected. Press the button on the case and hold it for 3 seconds</string>
     <string name="login">Log in</string>
     <string name="password">Password</string>
     <string name="connecting">Connecting…</string>
@@ -14,9 +14,7 @@
     <string name="channel_name">IQBell State</string>
     <string name="channel_description">Shows whether IQBell is connected</string>
     <string name="preparing">Preparing to connect</string>
-    <string name="authorized">Authorized</string>
     <string name="save_pass">Remember password</string>
-    <string name="basic_pass_info">Contains letters A-z, a-z, and digits</string>
     <string name="get_time">Get time</string>
     <string name="pass_deleted">Saved password was deleted!</string>
     <string name="pass_saved">The password was saved!</string>
@@ -29,7 +27,6 @@
     <string name="holidays">Holidays</string>
     <string name="about">About</string>
     <string name="authenticating">Authenticating</string>
-    <string name="auto_auth_switch">Auto authorization</string>
     <string name="manual_bells_control">Manual Bells Control</string>
     <string name="iqbell_time_date">IQBell\'s time and date</string>
     <string name="new_time_date">New time and date</string>

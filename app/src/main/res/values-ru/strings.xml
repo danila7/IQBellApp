@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="basic_pass_info">Содержит латинские буквы и цифры</string>
-    <string name="authorized">Вход выполнен</string>
     <string name="bt_is_off">Bluetooth выключен! Включите, чтобы продолжить</string>
     <string name="bt_not_supported">Bluetooth не поддерживается на вашем устройстве!</string>
     <string name="channel_description">Показывает статус подключения IQBell</string>
     <string name="channel_name">Состояние IQBell</string>
     <string name="connected">IQBell подключен</string>
     <string name="connecting">Соединение…</string>
-    <string name="disconnected">IQBell не подключен. Нажмите кнопку на корпусе и удерживайте в течении 5 секунд</string>
+    <string name="disconnected">IQBell не подключен. Нажмите кнопку на корпусе и удерживайте в течении 3 секунд</string>
     <string name="error_bt_enabling">Возникла ошибка при включении Bluetooth</string>
     <string name="get_time">Получить время</string>
     <string name="iq_status">Состояние подключения:</string>
@@ -27,7 +25,6 @@
     <string name="home">Главная</string>
     <string name="about">О приложении</string>
     <string name="authenticating">Выполняется вход</string>
-    <string name="auto_auth_switch">Автоматический вход</string>
     <string name="manual_bells_control">Ручное управление звонками</string>
     <string name="iqbell_time_date">Время и дата на IQBell</string>
     <string name="new_time_date">Новые время и дата</string>
