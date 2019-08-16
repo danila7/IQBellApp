@@ -22,7 +22,6 @@
     <string name="turn_on">Включить Bluetooth</string>
     <string name="unknown">Неизвестно</string>
     <string name="authorization_failed">Неверный пароль</string>
-    <string name="calendar">Календарь</string>
     <string name="battery">Батарея</string>
     <string name="timetable">Расписание</string>
     <string name="home">Главная</string>
@@ -39,15 +38,18 @@
     <string name="time">Время</string>
     <string name="send">Отправить</string>
     <string name="data_was_sent">Данные успешно отправлены</string>
-    <string name="main_tab">Основное</string>
+    <string name="timetables_main_tab">Основное</string>
     <string name="sending_data">Данные отправляются</string>
     <string name="cancel">Отмена</string>
     <string name="error">Ошибка</string>
     <string name="repeat">Повторить</string>
-    <string name="error_sendind">Не удалось передать данные</string>
+    <string name="error_sending">Не удалось передать данные</string>
     <string name="clear">Очистить</string>
     <string name="edit">Редактировать</string>
     <string name="error_updating_extra">Ошибка получения данных</string>
     <string name="data_updated">Данные успешно обновлены</string>
-    <string name="second_tab">Сокращённое</string>
+    <string name="timetables_second_tab">Сокращённое</string>
+    <string name="holidays">Каникулы</string>
+    <string name="holidays_long_tab">Каникулы</string>
+    <string name="holidays_short_tab">Выходные/Сокращённые дни</string>
 </resources>

@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
     private lateinit var lastData: ByteArray
     private val homeFragment = HomeFragment()
     private val timetableContainerFragment = TimetableContainerFragment()
-    private val calendarFragment = CalendarFragment()
+    private val holidaysContainerFragment = HolidaysContainerFragment()
     private val batteryFragment = BatteryFragment()
     private val timeFragment = TimeFragment()
     private var active: Fragment = homeFragment
@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
         bottomNavigation.setOnNavigationItemSelectedListener(navListener)
         fm.beginTransaction().add(R.id.fragment_container, timeFragment, "5").hide(timeFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, batteryFragment, "4").hide(batteryFragment).commit()
-        fm.beginTransaction().add(R.id.fragment_container, calendarFragment, "3").hide(calendarFragment).commit()
+        fm.beginTransaction().add(R.id.fragment_container, holidaysContainerFragment, "3").hide(holidaysContainerFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, timetableContainerFragment, "2").hide(timetableContainerFragment).commit()
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
         val startData = intent.getByteArrayExtra(START_DATA)!!
@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
         timeFragment.setStartData(startData.copyOfRange(0, 4))
         batteryFragment.setStartData(startData[4])
         timetableContainerFragment.setStartData(startExtraData.copyOfRange(0, 32))
+        holidaysContainerFragment.setStartData(startExtraData.copyOfRange(32, 80))
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
     }
 
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
         when(active){
             is HomeFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
             is TimetableContainerFragment -> menuInflater.inflate(if(edit)R.menu.menu_toolbar_send_edit else R.menu.menu_toolbar_send, menu)
-            is CalendarFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
+            is HolidaysContainerFragment -> menuInflater.inflate(if(edit)R.menu.menu_toolbar_send_edit else R.menu.menu_toolbar_send, menu)
             is BatteryFragment -> menuInflater.inflate(R.menu.menu_toolbar, menu)
             is TimeFragment -> menuInflater.inflate(R.menu.menu_toolbar_send, menu)
         }
@@ -89,16 +90,18 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
                 fm.beginTransaction().hide(active).show(batteryFragment).commit()
                 active = batteryFragment
             }
-            R.id.action_calendar -> {
-                fm.beginTransaction().hide(active).show(calendarFragment).commit()
-                active = calendarFragment
+            R.id.action_holidays -> {
+                fm.beginTransaction().hide(active).show(holidaysContainerFragment).commit()
+                active = holidaysContainerFragment
             }
             R.id.action_timetable -> {
                 fm.beginTransaction().hide(active).show(timetableContainerFragment).commit()
                 active = timetableContainerFragment
             }
         }
-
+        timetableContainerFragment.resetSelectedState()
+        holidaysContainerFragment.resetSelectedState()
+        noEdit()
         invalidateOptionsMenu()
         return@OnNavigationItemSelectedListener true
     }
@@ -125,7 +128,9 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
                         negativeButton(getString(R.string.cancel)){}
                     }.show()
                 } else{
-                    timetableContainerFragment.updateData(extra)
+                    timetableContainerFragment.updateData(extra.copyOfRange(0, 32))
+                    holidaysContainerFragment.updateData(extra.copyOfRange(32, 80))
+
                     alert(R.string.data_updated) {
                         okButton {}
                     }.show()
@@ -133,7 +138,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
             }
             IQService.ERROR -> {
                 dialog.dismiss()
-                alert (R.string.error_sendind){
+                alert (R.string.error_sending){
                     title = getString(R.string.error)
                     positiveButton(getString(R.string.repeat)){sendData(lastData)}
                     negativeButton(getString(R.string.cancel)){}

@@ -26,7 +26,7 @@
     <string name="battery">Battery</string>
     <string name="time">Time</string>
     <string name="timetable">Timetable</string>
-    <string name="calendar">Calendar</string>
+    <string name="holidays">Holidays</string>
     <string name="about">About</string>
     <string name="authenticating">Authenticating</string>
     <string name="auto_auth_switch">Auto authorization</string>
@@ -39,8 +39,8 @@
     <string name="set_android_td">Set Android\'s time and date</string>
     <string name="send">Send</string>
     <string name="data_was_sent">Data was sent successfully</string>
-    <string name="error_sendind">Sending data wasn\'t successful</string>
-    <string name="main_tab">Main</string>
+    <string name="error_sending">Sending data wasn\'t successful</string>
+    <string name="timetables_main_tab">Main</string>
     <string name="sending_data">Sending data</string>
     <string name="error">Error</string>
     <string name="repeat">Repeat</string>
@@ -49,5 +49,7 @@
     <string name="clear">Clear</string>
     <string name="error_updating_extra">Error updating data</string>
     <string name="data_updated">The data was successfully updated</string>
-    <string name="second_tab">Second</string>
+    <string name="timetables_second_tab">Second</string>
+    <string name="holidays_short_tab">Short holidays</string>
+    <string name="holidays_long_tab">Long holidays</string>
 </resources>

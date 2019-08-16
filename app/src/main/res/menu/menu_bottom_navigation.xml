@@ -15,10 +15,10 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_calendar"
+        android:id="@+id/action_holidays"
         android:enabled="true"
         android:icon="@drawable/ic_calendar_edit"
-        android:title="@string/calendar"
+        android:title="@string/holidays"
         app:showAsAction="ifRoom" />
 
     <item
