@@ -56,4 +56,12 @@
     <string name="to">по</string>
     <string name="set_start_date">Установите начало каникул</string>
     <string name="set_end_date">Установите конец каникул</string>
+    <string name="battery_state">Состояние батареи:</string>
+    <string name="charging">Заряжается</string>
+    <string name="not_charging">Не заряжается</string>
+    <string name="charged">Заряжен</string>
+    <string name="brightness">Яркость дисплея</string>
+    <string name="workshop">Совещание</string>
+    <string name="lineika">Линейка</string>
+    <string name="average_ringing">Обычный звонок</string>
 </resources>

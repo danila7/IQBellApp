@@ -10,26 +10,28 @@ class ShortHolidaysFragment : MyListFragment(){
     override var stringData = Array(8) {" "}
 
     override fun updateView() {
-        for(i in 0..7){
-            var invalid = false
-            val c = GregorianCalendar()
-            var t = byteData[i*2].toUByte()
-            val isShort = (t > 127.toUInt())
-            t = t and 0x7F.toUByte()
-            val month = t.toInt()
-            if(month == 0 || month > 12) invalid = true
-            t = byteData[i*2+1].toUByte()
-            val day = t.toInt()
-            if(day == 0 || day > 31) invalid = true
-            if(invalid){
-                stringData[i] = "$i."
-            } else{
-                c.set(2000, month - 1, day)
-                stringData[i] = "$i.   " + String.format("%1\$te %1\$tB : ", c) +
-                        getString(if(isShort)R.string.short_day else R.string.holiday_day)
+        if(activity != null){
+            for(i in 0..7){
+                var invalid = false
+                val c = GregorianCalendar()
+                var t = byteData[i*2].toUByte()
+                val isShort = (t > 127.toUInt())
+                t = t and 0x7F.toUByte()
+                val month = t.toInt()
+                if(month == 0 || month > 12) invalid = true
+                t = byteData[i*2+1].toUByte()
+                val day = t.toInt()
+                if(day == 0 || day > 31) invalid = true
+                if(invalid){
+                    stringData[i] = "$i."
+                } else{
+                    c.set(2000, month - 1, day)
+                    stringData[i] = "$i.   " + String.format("%1\$te %1\$tB : ", c) +
+                            getString(if(isShort)R.string.short_day else R.string.holiday_day)
+                }
             }
+            adapter?.notifyDataSetChanged()
         }
-        adapter?.notifyDataSetChanged()
     }
 
     override fun clear(){

@@ -40,7 +40,7 @@ class IQService: Service() {
     }
 
     companion object {
-        private val PASSWORD = byteArrayOf(0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38)
+        private val PASSWORD = byteArrayOf(0x64, 0x67, 0x69, 0x71, 0x62, 0x65, 0x6C, 0x6C)
         const val address = "C2:2C:05:04:04:FA"
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         private const val TAG = "My Bluetooth Service"
@@ -385,7 +385,7 @@ class IQService: Service() {
                 if (nByte == 11) {
                     crc.reset()
                     crc.update(nByte)
-                    val tempData = ByteArray(if(extra) 80 else 5)
+                    val tempData = ByteArray(if(extra) 81 else 6)
                     iStream.read(tempData)
                     crc.update(tempData)
                     val gCh = getChecksum(iStream)

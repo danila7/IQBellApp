@@ -56,4 +56,12 @@
     <string name="to">to</string>
     <string name="set_start_date">Set start of the holidays</string>
     <string name="set_end_date">Set end of the holidays</string>
+    <string name="battery_state">Battery state:</string>
+    <string name="charging">Charging</string>
+    <string name="not_charging">Not charging</string>
+    <string name="charged">Charged</string>
+    <string name="brightness">Display brightness</string>
+    <string name="workshop">Workshop</string>
+    <string name="lineika">Lineika</string>
+    <string name="average_ringing">Average ringing</string>
 </resources>
