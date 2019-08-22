@@ -10,13 +10,8 @@
     <string name="error_bt_enabling">Возникла ошибка при включении Bluetooth</string>
     <string name="get_time">Получить время</string>
     <string name="iq_status">Состояние подключения:</string>
-    <string name="login">Вход</string>
     <string name="not_paired">IQBell не подключен. Выполните подключение в настройках Bluetooth и попробуйте ещё раз</string>
-    <string name="pass_deleted">Сохраненный пароль был удален!</string>
-    <string name="pass_saved">Пароль был сохранен!</string>
-    <string name="password">Пароль</string>
     <string name="preparing">Подготовка к соединению</string>
-    <string name="save_pass">Запомнить пароль</string>
     <string name="turn_on">Включить Bluetooth</string>
     <string name="unknown">Неизвестно</string>
     <string name="authorization_failed">Неверный пароль</string>
@@ -24,7 +19,6 @@
     <string name="timetable">Расписание</string>
     <string name="home">Главная</string>
     <string name="about">О приложении</string>
-    <string name="authenticating">Выполняется вход</string>
     <string name="manual_bells_control">Ручное управление звонками</string>
     <string name="iqbell_time_date">Время и дата на IQBell</string>
     <string name="new_time_date">Новые время и дата</string>
@@ -62,6 +56,22 @@
     <string name="charged">Заряжен</string>
     <string name="brightness">Яркость дисплея</string>
     <string name="workshop">Совещание</string>
-    <string name="lineika">Линейка</string>
+    <string name="assembly">Линейка</string>
     <string name="average_ringing">Обычный звонок</string>
+    <string name="classes">Учебный режим</string>
+    <string name="non_school_day">Неучебный день</string>
+    <string name="not_started">Уроки ещё не начались</string>
+    <string name="finished">Уроки закончились</string>
+    <string name="not_ringing">Реле выключено</string>
+    <string name="lesson_ringing">Звонок на урок</string>
+    <string name="workshop_ringing">Звонок на совещание</string>
+    <string name="assembly_ringing">Звонок на линейку</string>
+    <string name="normal_classes">Обычные уроки</string>
+    <string name="manual_bells_control_na">Ручное управление звонками не доступно</string>
+    <string name="next_bell">Следующий звонок</string>
+    <string name="time_till_next_bell">Время до него</string>
+    <string name="developer">Разработчик: Горнушко Данила</string>
+    <string name="purpose">Приложение для управления устройством IQBell</string>
+    <string name="thanks">Благодарности:</string>
+    <string name="license">Лицензия: GNU General Public License, version 3 (GPLv3)</string>
 </resources>

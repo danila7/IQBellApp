@@ -10,7 +10,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.jetbrains.anko.doAsync
 import java.io.IOException
@@ -41,9 +40,8 @@ class IQService: Service() {
 
     companion object {
         private val PASSWORD = byteArrayOf(0x64, 0x67, 0x69, 0x71, 0x62, 0x65, 0x6C, 0x6C)
-        const val address = "C2:2C:05:04:04:FA"
-        val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-        private const val TAG = "My Bluetooth Service"
+        const val address = "C2:2C:05:04:04:FA" //Bluetooth-address of IQBell
+        val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") //UUID for Serial data transfer
         private const val NOTIFICATIONS_CHANNEL = "new_channel"
         const val BT_OFF = 400
         const val BT_NOT_SUPPORTED = 1
@@ -156,7 +154,6 @@ class IQService: Service() {
     }
 
     override fun onBind(p0: Intent?): IBinder? {
-        Log.d(TAG, "onBind")
         return null
     }
 
@@ -194,7 +191,6 @@ class IQService: Service() {
             try {
                 socket?.close()
             } catch (e: IOException) {}
-            Log.d(TAG, "FINISHED")
         }
     }
 
@@ -237,10 +233,7 @@ class IQService: Service() {
                     updateNotification(getString(R.string.connecting), true)
                     try {
                         mmSocket.close()
-                        Log.d(TAG, "Socket closed")
-                    } catch (e: IOException) {
-                        Log.e(TAG, "Could not close the client socket: " + e.message)
-                    }
+                    } catch (e: IOException) {}
                 }
                 try {
                     sleep(200)
@@ -314,7 +307,7 @@ class IQService: Service() {
                 val crc = CRC32()
                 crc.reset()
                 crc.update(data)
-                sendChecksum(crc.value, oStream) //sending checksum
+                sendChecksum(crc.value) //sending checksum
                 try{
                     Thread.sleep(150)
                 } catch (e: InterruptedException){}
@@ -336,11 +329,11 @@ class IQService: Service() {
         }catch (e: IOException){}
     }
 
-    private fun sendChecksum(sum: Long, stream: OutputStream) {
+    private fun sendChecksum(sum: Long) {
         val tempSum = sum.toUInt()
         try{
-            for (i in 0..3) stream.write((tempSum shr 8 * i).toUByte().toInt())
-            stream.flush()
+            for (i in 0..3) oStream.write((tempSum shr 8 * i).toUByte().toInt())
+            oStream.flush()
         }catch (e: IOException){}
     }
 
@@ -378,14 +371,14 @@ class IQService: Service() {
             val crc = CRC32()
             crc.reset()
             crc.update(myData)
-            sendChecksum(crc.value, oStream) //sending checksum
+            sendChecksum(crc.value) //sending checksum
             Thread.sleep(200)
             if (iStream.available() > 0) {
                 val nByte = iStream.read()
                 if (nByte == 11) {
                     crc.reset()
                     crc.update(nByte)
-                    val tempData = ByteArray(if(extra) 81 else 6)
+                    val tempData = ByteArray(if(extra) 81 else 10)
                     iStream.read(tempData)
                     crc.update(tempData)
                     val gCh = getChecksum(iStream)

@@ -3,7 +3,6 @@ package com.gornushko.iqbell
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -17,7 +16,6 @@ import org.jetbrains.anko.sdk27.coroutines.onClick
 class ConnectActivity : AppCompatActivity(){
 
     companion object Const{
-        private const val TAG = "IQBell Login Activity"
         const val KEY = "key"
     }
 
@@ -107,12 +105,10 @@ class ConnectActivity : AppCompatActivity(){
             startService(Intent(this, IQService::class.java).putExtra(IQService.ACTION,
                 IQService.STOP_SERVICE))
         }
-        Log.d(TAG, "MAIN ACTIVITY DESTROYED")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.d(TAG, "Yeah! request: $requestCode result: $resultCode")
         when(resultCode){
             IQService.CONNECTION -> connecting()
             IQService.NOT_PAIRED -> btOnNotPaired()

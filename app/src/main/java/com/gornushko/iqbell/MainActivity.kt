@@ -44,7 +44,8 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
         fm.beginTransaction().add(R.id.fragment_container, homeFragment, "1").commit()
         val startData = intent.getByteArrayExtra(START_DATA)!!
         val startExtraData  = intent.getByteArrayExtra(START_EXTRA_DATA)!!
-        homeFragment.setStartData(startData.copyOfRange(0, 4))
+        homeFragment.setStartData(startData)
+        homeFragment.setStartExtraData(startExtraData.copyOfRange(0, 32))
         timeFragment.setStartData(startData.copyOfRange(0, 4))
         batteryFragment.setStartData(startData[4], startData[5])
         batteryFragment.setStartExtraData(startExtraData[80])
@@ -119,7 +120,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
         when(resultCode){
             IQService.DEVICE_STATE -> {
                 val state = data!!.getByteArrayExtra(IQService.DATA)!!
-                homeFragment.updateData(state.copyOfRange(0, 4))
+                homeFragment.updateData(state)
                 timeFragment.updateData(state.copyOfRange(0, 4))
                 batteryFragment.updateData(state[4], state[5])
             }
@@ -136,6 +137,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
                         negativeButton(getString(R.string.cancel)){}
                     }.show()
                 } else{
+                    homeFragment.updateExtraData(extra.copyOfRange(0, 32))
                     timetableContainerFragment.updateData(extra.copyOfRange(0, 32))
                     holidaysContainerFragment.updateData(extra.copyOfRange(32, 80))
                     batteryFragment.updateExtraData(extra[80])

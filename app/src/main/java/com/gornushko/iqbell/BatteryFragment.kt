@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import kotlinx.android.synthetic.main.fragment_battery.*
 import kotlinx.android.synthetic.main.fragment_battery.view.*
+import kotlin.experimental.and
 
 private var level: Int = 0
 private var brightness: Int = 0
@@ -45,7 +46,7 @@ class BatteryFragment : Fragment() {
     }
 
     fun setStartData(byteLevel: Byte, charging: Byte){
-        isCharging = charging.toInt()
+        isCharging = (charging and 0x7F.toByte()).toInt()
         level = byteLevel.toUByte().toInt()
     }
 
@@ -60,24 +61,13 @@ class BatteryFragment : Fragment() {
 
     @SuppressLint("SetTextI18n")
     fun updateView(){
-
-        when (isCharging){
-            0 -> {
-                battery.chargeLevel = level
-                batteryLevel.text = "$level%, " + getString(R.string.not_charging)
-                battery.isCharging = false
-            }
-            1 -> {
-                battery.chargeLevel = level-1
-                batteryLevel.text = "${level-1}%, " + getString(R.string.charging)
-                battery.isCharging = true
-            }
-            2 -> {
-                battery.chargeLevel = 100
-                batteryLevel.text = "100%, " + getString(R.string.charged)
-                battery.isCharging = true
-            }
-        }
+        battery.chargeLevel = level
+        battery.isCharging = isCharging > 3
+        batteryLevel.text = "$level%, " + getString(when (isCharging){
+            4 -> R.string.charging
+            5 -> R.string.charged
+            else -> R.string.not_charging
+            })
         brightness_label.text = getString(R.string.brightness) + ": ${(brightness.toFloat()/2.55).toInt()}%"
         view!!.change_brigtness.progress = brightness
     }
