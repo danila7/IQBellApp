@@ -73,6 +73,6 @@
     <string name="developer">Developer: Danila Gornushko</string>
     <string name="purpose">An application for controlling IQBell Device</string>
     <string name="thanks">Thanks to:</string>
-    <string name="names" translatable="false">Антон Науменко, Светлана Науменко, Miha-x64, Алексей Шефлер</string>
+    <string name="names" translatable="false">Антон Науменко, Светлана Науменко, Miha-x64, Алексей Шефлер, Сергей Дынников, Расита Губачикова</string>
     <string name="license">License: GNU General Public License, version 3 (GPLv3)</string>
 </resources>
