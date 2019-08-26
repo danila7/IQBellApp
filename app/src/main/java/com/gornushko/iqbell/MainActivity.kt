@@ -47,8 +47,8 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
         homeFragment.setStartData(startData)
         homeFragment.setStartExtraData(startExtraData.copyOfRange(0, 32))
         timeFragment.setStartData(startData.copyOfRange(0, 4))
-        batteryFragment.setStartData(startData[4], startData[5])
-        batteryFragment.setStartExtraData(startExtraData[80])
+        batteryFragment.setStartData(startData[4])
+        batteryFragment.setStartExtraData(startExtraData[80], startExtraData[81])
         timetableContainerFragment.setStartData(startExtraData.copyOfRange(0, 32))
         holidaysContainerFragment.setStartData(startExtraData.copyOfRange(32, 80))
         startService(intentFor<IQService>(IQService.ACTION to IQService.NEW_PENDING_INTENT, IQService.PENDING_INTENT to createPendingResult(1, intent, 0)))
@@ -122,7 +122,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
                 val state = data!!.getByteArrayExtra(IQService.DATA)!!
                 homeFragment.updateData(state)
                 timeFragment.updateData(state.copyOfRange(0, 4))
-                batteryFragment.updateData(state[4], state[5])
+                batteryFragment.updateData(state[4])
             }
             IQService.RECONNECTING, IQService.BT_OFF -> {
                 goingBack = true
@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity(), MyFragmentListener {
                     homeFragment.updateExtraData(extra.copyOfRange(0, 32))
                     timetableContainerFragment.updateData(extra.copyOfRange(0, 32))
                     holidaysContainerFragment.updateData(extra.copyOfRange(32, 80))
-                    batteryFragment.updateExtraData(extra[80])
+                    batteryFragment.updateExtraData(extra[80], extra[81])
                     alert(R.string.data_updated) {
                         okButton {}
                     }.show()

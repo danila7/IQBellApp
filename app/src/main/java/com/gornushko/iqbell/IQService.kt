@@ -378,7 +378,7 @@ class IQService: Service() {
                 if (nByte == 11) {
                     crc.reset()
                     crc.update(nByte)
-                    val tempData = ByteArray(if(extra) 81 else 10)
+                    val tempData = ByteArray(if(extra) 82 else 9)
                     iStream.read(tempData)
                     crc.update(tempData)
                     val gCh = getChecksum(iStream)

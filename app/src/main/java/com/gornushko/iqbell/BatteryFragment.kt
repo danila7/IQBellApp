@@ -45,13 +45,13 @@ class BatteryFragment : Fragment() {
         return view
     }
 
-    fun setStartData(byteLevel: Byte, charging: Byte){
+    fun setStartData(charging: Byte){
         isCharging = (charging and 0x7F.toByte()).toInt()
-        level = byteLevel.toUByte().toInt()
     }
 
-    fun setStartExtraData(br: Byte){
+    fun setStartExtraData(br: Byte, byteLevel: Byte){
         brightness = br.toUByte().toInt()
+        level = byteLevel.toUByte().toInt()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -72,14 +72,14 @@ class BatteryFragment : Fragment() {
         view!!.change_brigtness.progress = brightness
     }
 
-    fun updateData(byteLevel: Byte,  charging: Byte){
+    fun updateData(charging: Byte){
         isCharging = charging.toInt()
-        level = byteLevel.toUByte().toInt()
         updateView()
     }
 
-    fun updateExtraData(br: Byte){
+    fun updateExtraData(br: Byte, byteLevel: Byte){
         brightness = br.toUByte().toInt()
+        level = byteLevel.toUByte().toInt()
         updateView()
     }
 
