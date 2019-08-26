@@ -24,11 +24,12 @@ class LongHolidaysFragment : MyListFragment(){
             if(endMonth == 0 || endMonth > 12) invalid = true
             if(endDay == 0 || endDay > 31) invalid = true
             if(invalid){
-                stringData[i] = "$i."
+                stringData[i] = "${i + 1}."
             } else{
+
                 startDate.set(2000, startMonth - 1, startDay)
                 endDate.set(2000, endMonth - 1, endDay)
-                stringData[i] = "$i.   " + getString(R.string.from) + String.format(" %1\$te %1\$tB ", startDate) +
+                stringData[i] = "${i + 1}.   " + getString(R.string.from) + String.format(" %1\$te %1\$tB ", startDate) +
                         getString(R.string.to) + String.format(" %1\$te %1\$tB", endDate)
             }
         }

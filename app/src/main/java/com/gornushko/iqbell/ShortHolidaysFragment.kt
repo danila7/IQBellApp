@@ -23,10 +23,10 @@ class ShortHolidaysFragment : MyListFragment(){
                 val day = t.toInt()
                 if(day == 0 || day > 31) invalid = true
                 if(invalid){
-                    stringData[i] = "$i."
+                    stringData[i] = "${i + 1}."
                 } else{
                     c.set(2000, month - 1, day)
-                    stringData[i] = "$i.   " + String.format("%1\$te %1\$tB : ", c) +
+                    stringData[i] = "${i + 1}.   " + String.format("%1\$te %1\$tB : ", c) +
                             getString(if(isShort)R.string.short_day else R.string.holiday_day)
                 }
             }
