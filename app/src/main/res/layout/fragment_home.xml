@@ -1,157 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".HomeFragment">
-
-    <com.leondzn.simpleanalogclock.SimpleAnalogClock
-            android:id="@+id/clock"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            app:faceTint="@color/colorPrimary"
-            app:hourTint="@color/colorPrimary"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:minuteTint="@color/colorPrimaryDark"
-            app:secondTint="@color/colorAccent" />
 
     <TextView
             android:id="@+id/date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="9dp"
             android:layout_marginEnd="8dp"
             android:text="@string/unknown"
             android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@+id/clock"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/clock"
-            app:layout_constraintTop_toTopOf="@+id/clock"
-            app:layout_constraintVertical_bias="0.19" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/time" />
+
     <Button
-            android:text="@string/workshop"
+            android:id="@+id/workshop_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/workshop_button" app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            android:layout_marginBottom="16dp" app:layout_constraintBottom_toTopOf="@+id/assembly_button"/>
-    <Button
-            android:text="@string/assembly"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/assembly_button" app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            android:layout_marginBottom="70dp"
-            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/info"/>
-    <Button
-            android:text="@string/average_ringing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/ring_button" app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="8dp"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp" android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/assembly_button"/>
-    <TextView
-            android:text="@string/manual_bells_control"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:text="@string/workshop"
+            app:layout_constraintBottom_toTopOf="@+id/assembly_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+            android:id="@+id/assembly_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/info" app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
-            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="70dp"
+            android:text="@string/assembly"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/info" />
+
+    <Button
+            android:id="@+id/ring_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/average_ringing"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/assembly_button" />
+
+    <TextView
+            android:id="@+id/info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/ringing_state" app:layout_constraintVertical_bias="0.100000024"/>
+            android:text="@string/manual_bells_control"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ringing_state"
+            app:layout_constraintVertical_bias="0.100000024" />
 
     <TextView
             android:id="@+id/temperature"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
             android:text="@string/unknown"
             android:textSize="20sp"
             android:textStyle="bold|italic"
-            app:layout_constraintBottom_toBottomOf="@+id/clock"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
             android:id="@+id/ringing_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="23dp"
             android:layout_marginEnd="8dp"
             android:text="@string/unknown"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/clock" />
+            app:layout_constraintTop_toBottomOf="@+id/time_till_next_bell" />
 
     <TextView
             android:id="@+id/mode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:text="@string/unknown"
-            app:layout_constraintBottom_toBottomOf="@+id/clock"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/clock"
-            app:layout_constraintTop_toTopOf="@+id/clock"
-            app:layout_constraintVertical_bias="0.37" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/date" />
 
     <TextView
             android:id="@+id/timetable"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="5dp"
             android:layout_marginEnd="8dp"
             android:text="@string/unknown"
-            app:layout_constraintBottom_toBottomOf="@+id/clock"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/clock"
-            app:layout_constraintTop_toTopOf="@+id/clock" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/mode" />
 
     <TextView
             android:id="@+id/next_bell"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="26dp"
             android:layout_marginEnd="8dp"
             android:text="@string/unknown"
             android:textAlignment="center"
-            app:layout_constraintBottom_toBottomOf="@+id/clock"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/clock"
-            app:layout_constraintTop_toTopOf="@+id/clock"
-            app:layout_constraintVertical_bias="0.75" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/timetable" />
 
     <TextView
             android:id="@+id/time_till_next_bell"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="27dp"
             android:layout_marginEnd="8dp"
             android:text="@string/unknown"
             android:textAlignment="center"
-            app:layout_constraintBottom_toBottomOf="@+id/clock"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/clock" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/next_bell" />
 
     <TextView
             android:id="@+id/time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
             android:text="@string/unknown"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/clock"
-            app:layout_constraintTop_toTopOf="@+id/clock" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -59,7 +59,6 @@ class HomeFragment : Fragment() {
         iqTime.timeInMillis = (getLongFromByteArray(byteData.copyOfRange(0, 4)) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
         date.text = df.format(iqTime.time)
         time.text = tf.format(iqTime.time)
-        clock.setTime(iqTime.get(Calendar.HOUR), iqTime.get(Calendar.MINUTE), iqTime.get(Calendar.SECOND))
         temperature.text = "${byteData[5].toInt()}" + "℃"
         val iqMode = (byteData[4] and 0x7F).toInt()
         mode.text = getString(when(iqMode){
