@@ -16,6 +16,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.lang.Exception
 import java.util.*
+import android.app.NotificationManager
+import android.app.NotificationChannel
 import java.io.OutputStream
 import java.util.zip.CRC32
 
@@ -40,6 +42,7 @@ class IQService: Service() {
         private val PASSWORD = byteArrayOf(0x64, 0x67, 0x69, 0x71, 0x62, 0x65, 0x6C, 0x6C)
         const val address = "C2:2C:05:04:04:FA" //Bluetooth-address of IQBell
         val MY_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") //UUID for Serial data transfer
+        private const val NOTIFICATIONS_CHANNEL = "new_channel"
         const val BT_OFF = 400
         const val BT_NOT_SUPPORTED = 1
         const val PENDING_INTENT = "pint"
@@ -122,7 +125,8 @@ class IQService: Service() {
     }
 
     private fun updateNotification(text: String, progress: Boolean) {
-        val builder = NotificationCompat.Builder(this)
+        createNotificationsChannel()
+        val builder = NotificationCompat.Builder(this, NOTIFICATIONS_CHANNEL)
             .setSmallIcon(R.drawable.ic_bell_outline)
             .setContentTitle(getText(R.string.iq_status))
             .setContentText(text)
@@ -132,6 +136,21 @@ class IQService: Service() {
         if (progress) builder.setProgress(0, 0, true)
         val notification = builder.build()
         startForeground(1, notification)
+    }
+
+    private fun createNotificationsChannel() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel(
+                NOTIFICATIONS_CHANNEL, "Connection status",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            channel.description = "IQBell Status"
+            channel.enableVibration(false)
+            channel.enableLights(false)
+            channel.lockscreenVisibility = NotificationCompat.VISIBILITY_SECRET
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     override fun onBind(p0: Intent?): IBinder? {
@@ -336,9 +355,9 @@ class IQService: Service() {
             try{
                 Thread.sleep(100) //waiting for answer
             }catch (e: InterruptedException){}
-        if (iStream.available() > 0) {
-            code = iStream.read() //reading the answer
-            clearInput()
+            if (iStream.available() > 0) {
+                code = iStream.read() //reading the answer
+                clearInput()
             }
         }catch (e: IOException){}
         return code == 11
