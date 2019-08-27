@@ -27,7 +27,7 @@ class TimetableFragment : MyListFragment() {
 
     override fun edit(){
         val tt = (byteData[adapter?.selectedItem!!].toUByte() and 0x7F.toUByte()).toInt()
-        TimePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
+        TimePickerDialog(activity!!, R.style.ThemeOverlay_AppCompat_Dialog,
             TimePickerDialog.OnTimeSetListener{ _, mHour, mMinute -> run{
                 val t = (((mHour-8)*12)+(mMinute/5)).toUByte()
                 if(t < 128.toUByte()) {

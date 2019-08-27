@@ -41,7 +41,7 @@ class ShortHolidaysFragment : MyListFragment(){
 
     override fun edit(){
         val c = GregorianCalendar()
-        DatePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
+        DatePickerDialog(activity!!, R.style.ThemeOverlay_AppCompat_Dialog,
             DatePickerDialog.OnDateSetListener{ _, _, mMonth, mDay -> run{
                 alert(getString(R.string.choose_short_or_holiday)) {
                     negativeButton(getString((R.string.holiday_day))){

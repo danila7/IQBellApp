@@ -69,7 +69,7 @@ class TimeFragment : Fragment() {
     }
 
     private fun pickTime(){
-        TimePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
+        TimePickerDialog(activity!!, R.style.ThemeOverlay_AppCompat_Dialog,
             TimePickerDialog.OnTimeSetListener{ _, mHour, mMinute -> run{
                 newDateTime.set(Calendar.HOUR_OF_DAY, mHour)
                 newDateTime.set(Calendar.MINUTE, mMinute)
@@ -79,7 +79,7 @@ class TimeFragment : Fragment() {
     }
 
     private fun pickDate(){
-        DatePickerDialog(activity!!, android.R.style.ThemeOverlay_Material_Dialog,
+        DatePickerDialog(activity!!, R.style.ThemeOverlay_AppCompat_Dialog,
             DatePickerDialog.OnDateSetListener{_, mYear, mMonth, mDay -> run{
                 newDateTime.set(Calendar.YEAR, mYear)
                 newDateTime.set(Calendar.MONTH, mMonth)
