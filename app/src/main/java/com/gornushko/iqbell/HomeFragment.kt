@@ -60,8 +60,8 @@ class HomeFragment : Fragment() {
         date.text = df.format(iqTime.time)
         time.text = tf.format(iqTime.time)
         clock.setTime(iqTime.get(Calendar.HOUR), iqTime.get(Calendar.MINUTE), iqTime.get(Calendar.SECOND))
-        temperature.text = "${byteData[6].toInt()}" + "℃"
-        val iqMode = (byteData[5] and 0x7F).toInt()
+        temperature.text = "${byteData[5].toInt()}" + "℃"
+        val iqMode = (byteData[4] and 0x7F).toInt()
         mode.text = getString(when(iqMode){
             0 -> R.string.classes
             1 -> R.string.non_school_day
@@ -70,8 +70,8 @@ class HomeFragment : Fragment() {
             4 -> R.string.charging
             else -> R.string.charged
         })
-        val shortTimetable = byteData[5].toUByte().toInt() > 127
-        val nextBellByte = byteData[9].toUByte().toInt()
+        val shortTimetable = byteData[4].toUByte().toInt() > 127
+        val nextBellByte = byteData[8].toUByte().toInt()
         when(iqMode){
             0, 2, 3 -> {
                 timetable.visibility = View.VISIBLE
@@ -96,13 +96,13 @@ class HomeFragment : Fragment() {
             next_bell.visibility = View.GONE
             time_till_next_bell.visibility = View.GONE
         }
-        ringing_state.text = when(byteData[7].toInt()){
+        ringing_state.text = when(byteData[6].toInt()){
             0 -> getString(R.string.not_ringing)
-            1 -> getString(R.string.lesson_ringing) + ": ${byteData[8].toInt()}"
-            2 -> getString(R.string.workshop_ringing) + ": ${byteData[8].toInt()}"
-            else -> getString(R.string.assembly_ringing) + ": ${byteData[8].toInt()}"
+            1 -> getString(R.string.lesson_ringing) + ": ${byteData[7].toInt()}"
+            2 -> getString(R.string.workshop_ringing) + ": ${byteData[7].toInt()}"
+            else -> getString(R.string.assembly_ringing) + ": ${byteData[7].toInt()}"
         }
-        if(byteData[7].toInt() > 0 || iqMode > 0){
+        if(byteData[6].toInt() > 0 || iqMode > 0){
             workshop_button.visibility = View.GONE
             assembly_button.visibility = View.GONE
             ring_button.visibility = View.GONE
