@@ -10,10 +10,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.fragment_time.*
-import kotlinx.android.synthetic.main.fragment_time.view.*
-import org.jetbrains.anko.sdk27.coroutines.onClick
 import java.text.DateFormat
 import java.util.*
+import kotlinx.android.synthetic.main.fragment_time.view.*
+import org.jetbrains.anko.sdk27.coroutines.onClick
 
 
 private val currentDateTime: Calendar = GregorianCalendar.getInstance()
@@ -58,8 +58,6 @@ class TimeFragment : Fragment() {
         currentDateTime.timeInMillis = (getLongFromByteArray(timeData) - 10_800)*1_000 //-3 h (Arduino stores MSC time, Android - UTC)
         current_time.text = tf.format(currentDateTime.time)
         current_date.text = df.format(currentDateTime.time)
-        clock.setTime(currentDateTime.get(Calendar.HOUR), currentDateTime.get(Calendar.MINUTE), currentDateTime.get(Calendar.SECOND))
-
     }
 
     private fun getLongFromByteArray(data: ByteArray): Long{
